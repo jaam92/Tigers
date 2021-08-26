@@ -9,7 +9,8 @@ setwd("~/TigerProject/IBD")
 popsDF = read_csv("~/TigerProject/IndivFiles/individual_ids.csv") %>%
   mutate(combo = ifelse(Subspecies == "Unknown", paste(Subspecies, "-", Phenotype, sep = ""), Subspecies))
 
-uSub1 = read.csv("~/TigerProject/IndivFiles/Unrelateds_basedOnSubspecies1_highCov.csv") #unrelated based on subspecies 1
+
+uSub2 = read.csv("~/TigerProject/IndivFiles/Unrelateds_basedOnSubspecies2_highCov.csv") #unrelated based on subspecies 2, split unknowns
 
 #####IBD from truffle is reported in Mbp
 df = read_delim("~/TigerProject/IBD/allChroms_truffle_allSubSpecies_calledPerSpecies.segments.coverage.bed", delim = "\t", col_names = c("chrom","start","end", "sample1","sample2", "typeIBD", "IBDLengthMb", "PropCovered"), col_types = "cnncccnn") %>%
@@ -22,12 +23,13 @@ IBDgr2Mb = df[which(df$IBDLengthMb >= 2),][c("chrom","start","end", "sample1","s
 z = data.table(IBDgr2Mb)
 z[,ToKeep := abs(IBDgr2Mb$PropCovered - mean(IBDgr2Mb$PropCovered)) < sd(IBDgr2Mb$PropCovered)][ToKeep  == TRUE] #ID IBD to keep
 
-#split on Subspecies 1
+
+#split on Subspecies 2
 dfIBD = z %>%
-  filter(ToKeep == "TRUE" & sample1%in%uSub1$Individual & sample2%in%uSub1$Individual) %>%
+  filter(ToKeep == "TRUE" & sample1%in%uSub2$Individual & sample2%in%uSub2$Individual) %>%
   mutate(ToKeep = NULL,
-         pop1 = popsDF$Subspecies[match(sample1, popsDF$Individual)],
-         pop2 = popsDF$Subspecies[match(sample2, popsDF$Individual)]) 
+         pop1 = popsDF$combo[match(sample1, popsDF$Individual)],
+         pop2 = popsDF$combo[match(sample2, popsDF$Individual)])
 
 groupScoreDF= dfIBD %>%
   filter(pop1 == pop2 & IBDLengthMb > 2 & IBDLengthMb <= 20) %>%
@@ -40,24 +42,24 @@ indivs = unique(c(unique(dfIBD$sample1), unique(dfIBD$sample2)))
 
 IBDScoreDF = popsDF %>%
   filter(Individual %in% indivs) %>%
-  group_by(Subspecies) %>%
+  group_by(combo) %>%
   count() %>%
   filter(n > 1) %>%
   mutate(normConstant = (choose(2*as.numeric(n), 2)) - as.numeric(n),
-         GroupScore = groupScoreDF$GroupScore[match(Subspecies, groupScoreDF$pop1)],
+         GroupScore = groupScoreDF$GroupScore[match(combo, groupScoreDF$pop1)],
          NormGroupScorePerMb = (GroupScore/normConstant)) %>%
   na.omit() #drop groups without ibd after filtering cut-offs
 
-IBDScoreDF$RelToGeneric = IBDScoreDF$NormGroupScorePerMb/IBDScoreDF[grep("Unknown$", IBDScoreDF$Subspecies),]$NormGroupScorePerMb
+IBDScoreDF$RelToGeneric = IBDScoreDF$NormGroupScorePerMb/IBDScoreDF[grep("Unknown-Orange$", IBDScoreDF$combo),]$NormGroupScorePerMb
 
+write.table(IBDScoreDF, "~/TigerProject/IBD/IBDScores_subspecies2Unrelateds.txt", quote = F, row.names = F, col.names = T, sep = "\t") #write out to file
 
-write.table(IBDScoreDF, "~/TigerProject/IBD/IBDScores_subspecies1Unrelateds.txt", quote = F, row.names = F, col.names = T, sep = "\t") #write out to file
 
 ##Plot data
 cbPalette = c("Generic" = "gray25", "Generic* (Amur)" = "lightsalmon2" , "Generic* (Bengal)" = "lightskyblue2", "Amur" = "#D55E00",  "Bengal" = "steelblue", "Malayan" = "#009E73", "Sumatran" = "gold3", "Indochinese" = "chocolate1", "South China" = "firebrick2", "Unknown"="darkmagenta", "Unknown-Orange" = "#CC79A7", "Unknown-SnowWhite" = "#867BCF", "Unknown-Golden"="darkseagreen3", "Unknown-White"="cornflowerblue")#palette
 
-PlotIBDScores = ggplot(data = IBDScoreDF, aes(x=Subspecies, y=NormGroupScorePerMb)) +
-  geom_point(aes(colour = Subspecies), size = 2) +
+PlotIBDScores = ggplot(data = IBDScoreDF, aes(x=combo, y=NormGroupScorePerMb)) +
+  geom_point(aes(colour = combo), size = 2) +
   labs(x="Sub-species", y="IBD Score (Mb)") +
   scale_colour_manual(name = "Sub-species", values = cbPalette) +
   theme_bw() + 
@@ -70,11 +72,11 @@ PlotIBDScores = ggplot(data = IBDScoreDF, aes(x=Subspecies, y=NormGroupScorePerM
 
 #plot relative to generic
 mid = mean(IBDScoreDF$RelToGeneric)
-PlotIBDRel2Generic = ggplot(IBDScoreDF, aes(y=RelToGeneric, x=Subspecies, fill=RelToGeneric)) + 
+PlotIBDRel2Generic = ggplot(IBDScoreDF, aes(y=RelToGeneric, x=combo, fill=RelToGeneric)) + 
   geom_bar(stat="identity") + 
   coord_flip() + 
   theme_bw() + 
-  labs(y = "Within Population IBD Score (Mb) Relative to Unknown\n Normalized by Sample Size", x="Sub-species") + 
+  labs(y = "Within Population IBD Score (Mb) Relative to Unknown-Orange\n Normalized by Sample Size", x="Sub-species") + 
   geom_hline(yintercept = mid, linetype="dashed", colour = "black") + 
   theme(axis.text.x = element_text(size = 20), 
         axis.text.y = element_text(size = 18), 
