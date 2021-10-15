@@ -14,7 +14,7 @@ popsDF = read_csv("~/TigerProject/IndivFiles/individual_ids.csv") %>%
 all_nodups_full_highCov = heterozygosity %>%
   left_join(popsDF) %>%
   mutate(Heterozygosity = (N_SITES-O_HOM)/1476111759,
-         Subspecies = factor(Subspecies, levels = c('Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran','Unknown'))) %>%
+         Subspecies2 = factor(Subspecies2, levels = c('Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran','Unknown'))) %>%
   arrange(Subspecies2, Heterozygosity) %>%
   filter(Individual != 'T1' & Coverage == "High") #remove T1 and low coverage individuals
 
@@ -63,14 +63,15 @@ VioPlotHet = ggplot(all_nodups_full_highCov, aes(x=Subspecies2, y=Heterozygosity
 
 
 ####Plot FSNP
-FSNP = ggplot(all_nodups_full_highCov, aes(x=Subspecies2, y=FSNP)) + 
-  geom_violin() +
-  geom_jitter(height = 0, width = 0.1, aes(colour = Subspecies2)) +
-  scale_color_manual(name="Subspecies", values=cbPalette) +
-  labs(x="Subspecies", y=expression(F[SNP])) +
+FSNP = ggplot(all_nodups_full_highCov, aes(x=Subspecies2, y=FSNP)) +
+  geom_violin(aes(fill=Subspecies2)) + 
+  geom_jitter(height = 0, width = 0.1) +
+  scale_fill_manual(name = "Subspecies", values = cbPalette) + 
+  labs(x="Subspecies", y=expression(F[SNP])) + 
   theme_bw() + 
-  theme(axis.text.x = element_text(size = 18), 
-        axis.text.y = element_text(size = 18), 
-        plot.title = element_text(size=26, face = "bold", hjust=0.5), 
-        axis.title = element_text(size=20),
-        legend.position = "none")
+  theme(axis.text.x = element_text(hjust = 0.5, vjust = 0.5, size = 16), 
+        axis.text.y = element_text(size = 16), 
+        plot.title = element_text(size = 18, face = "bold", hjust = 0.5), 
+        axis.title = element_text(size = 16),
+        legend.title = element_text(size=16),
+        legend.text = element_text(size=14))
