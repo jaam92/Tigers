@@ -7,14 +7,9 @@ setwd("~/TigerProject/ROH/")
 #Load roh and FSNP and meta data
 popsDF = read_csv("~/TigerProject/IndivFiles/individual_ids.csv")
 
-heterozygosity = read_delim('~/TigerProject/FSNP_Het/highcov-lowcov-nodups.ba-AN-MM-pcc-GM-MASTER.vcftoolshet.het', delim = '\t', col_names = TRUE)
-names(heterozygosity) = c('INDV','O_HOM', 'E_HOM', 'N_SITES','FSNP') #rename columns
-
 roh = read_delim("~/TigerProject/ROH/TrueROH_propCoveredwithin1SDMean_gr100kb_allChroms_highCov_runSpeciesSep_garlic.txt", delim = "\t") %>%
   left_join(popsDF, by = c("INDV" = "Individual")) %>%
-  left_join(heterozygosity) %>%
-  mutate(Heterozygosity = (N_SITES-O_HOM)/1476111759,
-         Subspecies2 = factor(Subspecies2, levels = c('Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran','Unknown')))
+  mutate(Subspecies2 = factor(Subspecies2, levels = c('Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran','Unknown')))
 
 rohLengthsClass = roh %>%
   group_by(INDV, TYPE) %>%
@@ -24,8 +19,7 @@ rohLengthsClass = roh %>%
 
 FROH = rohLengthsClass %>%
   filter(TYPE == "C") %>%
-  mutate(Froh = AUTO_LEN/2174711735,
-         Fsnp = roh$FSNP[match(INDV,roh$INDV)])
+  mutate(Froh = AUTO_LEN/2174711735)
 
 summaryTable = roh %>%
   arrange(TYPE, Subspecies2) %>%
@@ -67,8 +61,8 @@ plotFROH = ggplot(FROH, aes(x=Subspecies2, y=Froh)) +
         axis.text.y = element_text(size = 16), 
         plot.title = element_text(size = 18, face = "bold", hjust = 0.5), 
         axis.title = element_text(size = 16),
-        legend.title = element_text(size=16),
-        legend.text = element_text(size=14))
+        legend.title = element_text(size = 16),
+        legend.text = element_text(size = 14 ))
 
 print(plotFROH)
 
