@@ -54,7 +54,7 @@ IBDScoreDF$RelToGeneric = IBDScoreDF$NormGroupScorePerMb/IBDScoreDF[grep("Unknow
 write.table(IBDScoreDF, "~/TigerProject/IBD/IBDScores_subspecies1Unrelateds.txt", quote = F, row.names = F, col.names = T, sep = "\t") #write out to file
 
 ##Plot data
-cbPalette = c("Generic" = "gray25", "Generic* (Amur)" = "lightsalmon2" , "Generic* (Bengal)" = "lightskyblue2", "Amur" = "#D55E00",  "Bengal" = "steelblue", "Malayan" = "#009E73", "Sumatran" = "gold3", "Indochinese" = "chocolate1", "South China" = "firebrick2", "Unknown"="darkmagenta", "Unknown-Orange" = "#CC79A7", "Unknown-SnowWhite" = "#867BCF", "Unknown-Golden"="darkseagreen3", "Unknown-White"="cornflowerblue")#palette
+cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Unknown"="gray25", "Unknown-Orange" = "#CC79A7", "Unknown-SnowWhite" = "#867BCF", "Unknown-Golden"="darkseagreen3", "Unknown-White"="cornflowerblue")#palette
 
 PlotIBDScores = ggplot(data = IBDScoreDF, aes(x=Subspecies, y=NormGroupScorePerMb)) +
   geom_point(aes(colour = Subspecies), size = 2) +

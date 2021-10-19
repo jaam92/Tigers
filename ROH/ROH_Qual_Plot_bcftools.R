@@ -21,7 +21,7 @@ plotGeneric = df %>%
   summarise_at(c("AUTO_LEN"), sum, na.rm=TRUE) %>%
   ungroup() 
 
-cbPalette = c("Generic" = "gray25", "Amur" = "#D55E00",  "Bengal" = "steelblue", "Malayan" = "#009E73", "Sumatran" = "gold3", "Indochinese" = "chocolate1", "Sanctuary" = "#CC79A7", "F1Wild" = "#867BCF", "Wild"="goldenrod2", "F2Wild"="coral2", "Captive"="cornflowerblue", "Unknown"="darkmagenta", "Zoo"="darkseagreen3") #palette
+cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Unknown"="gray25", "Unknown-Orange" = "#CC79A7", "Unknown-SnowWhite" = "#867BCF", "Unknown-Golden"="darkseagreen3", "Unknown-White"="cornflowerblue")#palette
 
 ROH_Species = ggplot(plotGeneric , aes(y=Species, x=AUTO_LEN/10^6)) +
   geom_boxplot(outlier.shape = NA) + #remove outlier points and only use jitter
