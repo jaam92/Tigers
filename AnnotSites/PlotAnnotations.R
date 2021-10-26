@@ -4,7 +4,7 @@ library(tidyverse)
 library(ggpubr)
 
 #Plotting fxn and color palette
-cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Unknown"="gray25", "Unknown-Orange" = "#CC79A7", "Unknown-SnowWhite" = "#867BCF", "Unknown-Golden"="darkseagreen3", "Unknown-White"="cornflowerblue")#palette #palette
+cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Unknown"="gray25", "Unknown-Orange" = "#CC79A7", "Unknown-SnowWhite" = "#867BCF", "Unknown-Golden"="darkseagreen3", "Unknown-White"="cornflowerblue")#palette
 
 plotFxn = function(dataFrame, x_axisCol, y_axisCol, y_axisTitle) {
   RaincloudWithBoxPlot = ggplot(dataFrame, aes(x=x_axisCol, y=y_axisCol, colour=x_axisCol)) +
@@ -30,30 +30,30 @@ plotFxn = function(dataFrame, x_axisCol, y_axisCol, y_axisTitle) {
 }
 
 #Read file in 
-PlotDF = read_delim("~/TigerProject/AnnotSites/GTAnnotationCountResults_Sept2021_Tigers.txt", delim = "\t") %>%
+PlotDF = read_delim("~/TigerProject/AnnotSites/GTAnnotationCountResults_Oct2021_Tigers.txt", delim = "\t") %>%
   mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>%
   mutate(CallableSites = LineCount - Missing)
 
 
 ####Make Everything proportional 
-PropPlotDF = PlotDF[,c(1:12, 21:26)] %>%
-  mutate_at(vars(LOF_CountAlleles: PutNeuSIFT_CountVariants), list(~./PlotDF$CallableSites)) #Just run replace on plotting fxns with regular df to make everything proportional
+PropPlotDF = PlotDF[,c(1:12, 18:23, 69:71)] %>%
+  mutate_at(vars(NS_CountAlleles:LOF_CountVariants), list(~./PlotDF$CallableSites)) #Just run replace on plotting fxns with regular df to make everything proportional
 
 ####Make Scaled Count Alleles
 scaleCalls = mean(PlotDF$CallableSites)
 ScaledPlotDF = PropPlotDF %>%
-  mutate_at(vars(LOF_CountAlleles: PutNeuSIFT_CountVariants), list(~.*scaleCalls))
-#write.table(ScaledPlotDF, file = "~/TigerProject/AnnotSites/scaledGTAnnotationCountResults_Sept2021_Tigers.txt", col.names = TRUE, row.names = FALSE, quote = FALSE, sep = "\t")
+  mutate_at(vars(NS_CountAlleles:LOF_CountVariants), list(~.*scaleCalls))
+#write.table(ScaledPlotDF, file = "~/TigerProject/AnnotSites/scaledGTAnnotationCountResults_Oct2021_Tigers.txt", col.names = TRUE, row.names = FALSE, quote = FALSE, sep = "\t")
 
 ###Plot Supplementary Figures putativeley neutral and deleterious
-CountDerHom_PutNeu = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies ,y_axisCol = PlotDF$PutNeuSIFT_CountDerHom, y_axisTitle = "Count derived neutral homozygotes")
-CountDerHom_PutDel = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies ,y_axisCol = PlotDF$PutDelSIFT_CountDerHom, y_axisTitle = "Count derived deleterious homozygotes")
+CountDerHom_PutNeu = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies2 ,y_axisCol = PlotDF$PutNeuSIFT_CountDerHom, y_axisTitle = "Count derived neutral homozygotes")
+CountDerHom_PutDel = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies2 ,y_axisCol = PlotDF$PutDelSIFT_CountDerHom, y_axisTitle = "Count derived deleterious homozygotes")
 
-CountVar_PutNeu = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies ,y_axisCol = PlotDF$PutNeuSIFT_CountVariants, y_axisTitle = "Count derived neutral variants")
-CountVar_PutDel = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies ,y_axisCol = PlotDF$PutDelSIFT_CountVariants, y_axisTitle = "Count derived deleterious variants")
+CountVar_PutNeu = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies2 ,y_axisCol = PlotDF$PutNeuSIFT_CountVariants, y_axisTitle = "Count derived neutral variants")
+CountVar_PutDel = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies2 ,y_axisCol = PlotDF$PutDelSIFT_CountVariants, y_axisTitle = "Count derived deleterious variants")
 
-CountAllele_PutNeu = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies ,y_axisCol = PlotDF$PutNeuSIFT_CountAlleles, y_axisTitle = "Count derived neutral alleles")
-CountAllele_PutDel = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies ,y_axisCol = PlotDF$PutDelSIFT_CountAlleles, y_axisTitle = "Count derived deleterious alleles")
+CountAllele_PutNeu = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies2 ,y_axisCol = PlotDF$PutNeuSIFT_CountAlleles, y_axisTitle = "Count derived neutral alleles")
+CountAllele_PutDel = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies2 ,y_axisCol = PlotDF$PutDelSIFT_CountAlleles, y_axisTitle = "Count derived deleterious alleles")
 
 
 #Neutral
@@ -116,4 +116,90 @@ ggarrange(scaledPutNeuAnnot, scaledPutDelAnnot, nrow = 2)
 pairwise.wilcox.test(ScaledPlotDF$PutDelSIFT_CountDerHom, ScaledPlotDF$Subspecies2, p.adj = "bonf")$p.value
 pairwise.wilcox.test(ScaledPlotDF$PutDelSIFT_CountVariants, ScaledPlotDF$Subspecies2, p.adj = "bonf")$p.value
 pairwise.wilcox.test(ScaledPlotDF$PutDelSIFT_CountAlleles, ScaledPlotDF$Subspecies2, p.adj = "bonf")$p.value
-  
+
+
+
+
+####combine with FSNP and FROH
+source(file = "~/TigerProject/FSNP_Het/heterozygosity_plotting.R")
+source(file = "~/TigerProject/ROH/plotROH_garlic.R")
+
+mergedPlotDF = ScaledPlotDF %>%
+  mutate(FROH = FROH$Froh[match(ID, FROH$INDV)],
+         FSNP = all_nodups_full_highCov$FSNP[match(ID, all_nodups_full_highCov$Individual)]) %>%
+  na.omit(FSNP) %>%
+  na.omit(FROH)
+
+
+putDelAllele_FROH = ggplot(mergedPlotDF, aes(x=FROH, y=PutDelSIFT_CountAlleles)) +
+  geom_point(aes(colour = Subspecies2), size = 2) +
+  geom_smooth(method = "lm") +
+  stat_cor(aes(label = paste(..rr.label.., ..p.label.., sep = "~")), color = "red", geom = "label") + #this is not the adjusted r2
+  facet_grid(.~Subspecies2) +
+  scale_colour_manual(name = "Subspecies", values = cbPalette) +
+  labs(x=expression(F[ROH]), y="Count derived deleterious alleles") +
+  theme_bw() + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust = 1, size = 16), 
+        axis.text.y = element_text(size = 16), 
+        plot.title = element_text(size = 18, face = "bold", hjust = 0.5), 
+        axis.title = element_text(size = 16),
+        strip.text = element_text(size = 14))
+
+putDelDerHom_FROH = ggplot(mergedPlotDF, aes(x=FROH, y=PutDelSIFT_CountAlleles)) +
+  geom_point(aes(colour = Subspecies2), size = 2) +
+  geom_smooth(method = "lm") +
+  stat_cor(aes(label = paste(..rr.label.., ..p.label.., sep = "~")), color = "red", geom = "label") + #this is not the adjusted r2
+  facet_grid(.~Subspecies2) +
+  scale_colour_manual(name = "Subspecies", values = cbPalette) +
+  labs(x=expression(F[ROH]), y="Count derived deleterious homozygotes") +
+  theme_bw() + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust = 1, size = 16), 
+        axis.text.y = element_text(size = 16), 
+        plot.title = element_text(size = 18, face = "bold", hjust = 0.5), 
+        axis.title = element_text(size = 16),
+        strip.text = element_text(size = 14)) 
+
+putDelDerHom_FSNP = ggplot(mergedPlotDF, aes(x=FSNP, y=PutDelSIFT_CountAlleles)) +
+  geom_point(aes(colour = Subspecies2), size = 2) +
+  geom_smooth(method = "lm") +
+  stat_cor(aes(label = paste(..rr.label.., ..p.label.., sep = "~")), color = "red", geom = "label") + #this is not the adjusted r2
+  facet_grid(.~Subspecies2) +
+  scale_colour_manual(name = "Subspecies", values = cbPalette) +
+  labs(x=expression(F[SNP]), y="Count derived deleterious homozygotes") +
+  theme_bw() + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust = 1, size = 16), 
+        axis.text.y = element_text(size = 16), 
+        plot.title = element_text(size = 18, face = "bold", hjust = 0.5), 
+        axis.title = element_text(size = 16),
+        strip.text = element_text(size = 14)) 
+
+putDelAllele_FSNP = ggplot(mergedPlotDF, aes(x=FSNP, y=PutDelSIFT_CountAlleles)) +
+  geom_point(aes(colour = Subspecies2), size = 2) +
+  geom_smooth(method = "lm") +
+  stat_cor(aes(label = paste(..rr.label.., ..p.label.., sep = "~")), color = "red", geom = "label") + #this is not the adjusted r2
+  facet_grid(.~Subspecies2) +
+  scale_colour_manual(name = "Subspecies", values = cbPalette) +
+  labs(x=expression(F[SNP]), y="Count derived deleterious alleles") +
+  theme_bw() + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust = 1, size = 16), 
+        axis.text.y = element_text(size = 16), 
+        plot.title = element_text(size = 18, face = "bold", hjust = 0.5), 
+        axis.title = element_text(size = 16),
+        strip.text = element_text(size = 14))
+
+ggarrange(putDelAllele_FROH, putDelDerHom_FROH, common.legend = TRUE)
+ggarrange(putDelAllele_FSNP, putDelDerHom_FSNP, common.legend = TRUE)
+
+ggplot(mergedPlotDF, aes(x=FSNP, y=FROH)) +
+  geom_point(aes(colour = Subspecies2), size = 2) +
+  geom_smooth(method = "lm") +
+  stat_cor(aes(label = paste(..rr.label.., ..p.label.., sep = "~")), color = "red", geom = "label") + #this is not the adjusted r2
+  facet_grid(.~Subspecies2) +
+  scale_colour_manual(name = "Subspecies", values = cbPalette) +
+  labs(x=expression(F[ROH]), y=expression(F[SNP])) +
+  theme_bw() + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust = 1, size = 16), 
+        axis.text.y = element_text(size = 16), 
+        plot.title = element_text(size = 18, face = "bold", hjust = 0.5), 
+        axis.title = element_text(size = 16),
+        strip.text = element_text(size = 14))
