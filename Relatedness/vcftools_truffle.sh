@@ -17,7 +17,6 @@ bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S malayan-corr.txt -O
 
 
 ##Then run relatedness measures on each vcf file:
-
 for file in *.vcf.gz;do
   vcftools --vcf ${bn}.vcf.gz --relatedness --out ${bn}
   truffle --vcf ${bn}.vcf.gz --cpu 10 --segments --out ${bn}.truffle
