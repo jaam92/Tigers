@@ -5,16 +5,25 @@
 bcftools view highcov-lowcov-biallelic-AN-MM-pcc.vcf.gz -S highcov-nofilter.txt -O z -o highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
 bcftools view highcov-lowcov-biallelic-AN-MM-pcc.vcf.gz -S lowcov-nofilter.txt -O z -o lowcov-nofilter-biallelic-AN-MM-pcc.vcf.gz 
 
-
 ##Split high coverage files into specific populations
-bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S bengals-corr.txt -O z -o bengal-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
-bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S amurs-corr.txt -O z -o amur-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
-bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S generic-corr.txt -O z -o generic-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
-bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S indochinese-corr.txt -O z -o indochinese-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
-bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S southchina-corr.txt -O z -o southchina-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
-bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S sumatran-corr.txt -O z -o sumatran-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
-bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S malayan-corr.txt -O z -o malayan-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
+##these are with corrected population assignment
+bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S bengals-high-corr.txt -O z -o bengal-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
+bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S amurs-high-corr.txt -O z -o amur-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
+bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S generic-high-corr.txt -O z -o generic-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
+bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S indochinese-high-corr.txt -O z -o indochinese-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
+bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S southchina-high-corr.txt -O z -o southchina-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
+bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S sumatran-high-corr.txt -O z -o sumatran-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
+bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S malayan-high-corr.txt -O z -o malayan-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
 
+##Split all individual files into specific populations
+##these are with corrected population assignments
+bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S bengals-high-corr.txt -O z -o bengal-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
+bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S amurs-high-corr.txt -O z -o amur-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
+bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S generic-high-corr.txt -O z -o generic-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
+bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S indochinese-high-corr.txt -O z -o indochinese-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
+bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S southchina-high-corr.txt -O z -o southchina-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
+bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S sumatran-high-corr.txt -O z -o sumatran-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
+bcftools view highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz -S malayan-high-corr.txt -O z -o malayan-highcov-nofilter-biallelic-AN-MM-pcc.vcf.gz
 
 ##Then run relatedness measures on each vcf file:
 for file in *.vcf.gz;do
