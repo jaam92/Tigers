@@ -30,4 +30,5 @@ for file in *.vcf.gz;do
   vcftools --vcf ${bn}.vcf.gz --relatedness --out ${bn}
   truffle --vcf ${bn}.vcf.gz --cpu 10 --segments --out ${bn}.truffle
 done
+done
 
