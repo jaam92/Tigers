@@ -54,18 +54,6 @@ unrelsID = sampset$unrels
 #          pop2 = popsDF$Subspecies2[match(Var2, popsDF$Individual)]) %>%
 #   filter(pop1 == pop2 & Var1 != Var2)  
 # 
-####make unrelateds files
-# unrelateds = as.data.frame(unrelsID) %>%
-#   left_join(popsDF, by = c("unrelsID"="Individual")) %>%
-#   select(unrelsID, Subspecies2)#make data frame
-# 
-# write.table(unrelateds, "~/TigerProject/IndivFiles/allUnrelateds_pcair.txt", sep = "\t", quote = FALSE, col.names = FALSE, row.names = FALSE)
-# 
-# sfsIndividuals = unrelateds[!grepl("hin",unrelateds$Subspecies2),] %>%
-#   group_by(Subspecies2) %>%
-#   sample_n(10)
-# 
-# write.table(sfsIndividuals, "~/TigerProject/IndivFiles/sfsUnrelateds_N10_pcair.txt", sep = "\t", quote = FALSE, col.names = FALSE, row.names = FALSE)
 
 ####Run PC-AiR
 TigerspcAir = pcair(genoData, kinobj = KINGmat, kin.thresh=2^(-9/2), divobj = KINGmat, div.thresh=2^(-9/2), unrel.set = unrelsID, snp.include = pruned, autosome.only = F)
