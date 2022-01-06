@@ -9,23 +9,24 @@ library(tidyverse)
 #read in chroms
 chrom = read.table("~/Documents/Tigers/AnnotSites/chromNames.txt") %>%
   pull(V1)
-header = scan("~/Documents/Tigers/AnnotSites/VCFheader.txt", character(), quote = "")
 
-for (k in chrom) {
-  infile = paste0("~/Documents/Tigers/AnnotSites/PolarizedVCFs/AssignGT_CactusAncasREF_chr", k ,"_reformatted_masterFile_18SFS-ba-AN-MM-pcc-GM.vcf")
-  skipHash = sprintf("grep -v '^#' %s", infile) #run bash command to remove hashes and take a variable for input file
-  annotation = read_delim(file=paste0("~/Documents/Tigers/AnnotSites/Annotations/", k ,"_VEPandSIFT_felCat8_withTigerREFALT.txt"), delim="\t")
-  vcf = fread(cmd=skipHash) %>% 
-    select(-c(V1)) #remove the null column that get's added
+for (j in chrom) {
+  #Load file
+  annotation = read_delim(file=paste0("~/Documents/Tigers/AnnotSites/Annotations/", j ,"_VEPandSIFT_felCat8_withTigerREFALT.txt"), delim="\t")
   
-  #Change column names
-  colnames(vcf) = header
-  names(vcf)[1] = "CHROM"
-  names(vcf)[2] = "POS"
-  colnames(vcf) = gsub(".*]","", colnames(vcf))
+  infileVCF = fread(file = paste0("~/Documents/Tigers/AnnotSites/PolarizedVCFs/AssignGT_CactusAncasREF_chr", j ,"_reformatted_masterFile_18SFS-ba-AN-MM-pcc-GM.vcf"), sep = "\t",  fill = T) #read in vcf fread does not like the hash and it forces you to add an extra column
+  
+  #Modify column names
+  newColNames = colnames(infileVCF)[-length(colnames(infileVCF))] #grab column names and remove the extra column that gets added 
+  newColNames = gsub(".*]","", newColNames)
+  
+  #After making column names re-add names and remove extra column from reading vcf in
+  infileVCF = infileVCF %>% 
+    select(-c("#[1]CHROM")) #remove the null column that gets added
+  colnames(infileVCF) = newColNames
   
   #Add annotations
-  annotatedVCF = vcf %>%
+  annotatedVCF = infileVCF  %>%
     filter(as.numeric(POS) %in% as.numeric(annotation$tigerPos)) %>%
     mutate(ANNOT = annotation$recodeConsequence[match(POS,annotation$tigerPos)],
            IMPACT = annotation$IMPACT[match(POS,annotation$tigerPos)],
@@ -37,9 +38,10 @@ for (k in chrom) {
  
   for (i in indivs){
     indivAnnotDF = annotatedVCF %>%
-      select(CHROM, POS, i, ANNOT, IMPACT, SIFT)
+      select(CHROM, POS, all_of(i), ANNOT, IMPACT, SIFT)
+    colnames(indivAnnotDF) = gsub(":GT", "", colnames(indivAnnotDF))
     indivID = gsub(":GT", "", i)
-    write.table(indivAnnotDF, file=paste0("~/Documents/Tigers/AnnotSites/AnnotatedVCF/", k, "_annotatedGTwithVEP_",indivID, ".txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+    write.table(indivAnnotDF, file=paste0("~/Documents/Tigers/AnnotSites/AnnotatedVCF/", j, "_annotatedGTwithVEP_",indivID, ".txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
   }
-  cat(sprintf("done %s", k))
+  cat(sprintf("done %s", j))
 }
