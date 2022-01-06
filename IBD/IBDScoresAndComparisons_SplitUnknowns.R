@@ -7,10 +7,10 @@ library(ggpubr)
 setwd("~/TigerProject/IBD")
 
 popsDF = read_csv("~/TigerProject/IndivFiles/individual_ids.csv") %>%
-  mutate(combo = ifelse(Subspecies == "Unknown", paste(Subspecies, "-", Phenotype, sep = ""), Subspecies))
+  mutate(combo = ifelse(Subspecies == "Generic", paste(Subspecies, "-", Phenotype, sep = ""), Subspecies))
 
 
-uSub2 = read.csv("~/TigerProject/IndivFiles/Unrelateds_basedOnSubspecies2_highCov.csv") #unrelated based on subspecies 2, split unknowns
+uSub2 = read.csv("~/TigerProject/IndivFiles/Unrelateds_basedOnSubspecies2_highCov.csv") #unrelated based on subspecies 2, split Generics
 
 #####IBD from truffle is reported in Mbp
 df = read_delim("~/TigerProject/IBD/allChroms_truffle_allSubSpecies_calledPerSpecies.segments.coverage.bed", delim = "\t", col_names = c("chrom","start","end", "sample1","sample2", "typeIBD", "IBDLengthMb", "PropCovered"), col_types = "cnncccnn") %>%
@@ -50,13 +50,13 @@ IBDScoreDF = popsDF %>%
          NormGroupScorePerMb = (GroupScore/normConstant)) %>%
   na.omit() #drop groups without ibd after filtering cut-offs
 
-IBDScoreDF$RelToGeneric = IBDScoreDF$NormGroupScorePerMb/IBDScoreDF[grep("Unknown-Orange$", IBDScoreDF$combo),]$NormGroupScorePerMb
+IBDScoreDF$RelToGeneric = IBDScoreDF$NormGroupScorePerMb/IBDScoreDF[grep("Generic-Orange$", IBDScoreDF$combo),]$NormGroupScorePerMb
 
 write.table(IBDScoreDF, "~/TigerProject/IBD/IBDScores_subspecies2Unrelateds.txt", quote = F, row.names = F, col.names = T, sep = "\t") #write out to file
 
 
 ##Plot data
-cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Unknown"="gray25", "Unknown-Orange" = "#CC79A7", "Unknown-SnowWhite" = "#867BCF", "Unknown-Golden"="darkseagreen3", "Unknown-White"="cornflowerblue")#palette
+cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25", "Generic-Orange" = "#CC79A7", "Generic-SnowWhite" = "#867BCF", "Generic-Golden"="darkseagreen3", "Generic-White"="cornflowerblue")#palette
 
 PlotIBDScores = ggplot(data = IBDScoreDF, aes(x=combo, y=NormGroupScorePerMb)) +
   geom_point(aes(colour = combo), size = 2) +
@@ -76,7 +76,7 @@ PlotIBDRel2Generic = ggplot(IBDScoreDF, aes(y=RelToGeneric, x=combo, fill=RelToG
   geom_bar(stat="identity") + 
   coord_flip() + 
   theme_bw() + 
-  labs(y = "Within Population IBD Score (Mb) Relative to Unknown-Orange\n Normalized by Sample Size", x="Sub-species") + 
+  labs(y = "Within Population IBD Score (Mb) Relative to Generic-Orange\n Normalized by Sample Size", x="Sub-species") + 
   geom_hline(yintercept = mid, linetype="dashed", colour = "black") + 
   theme(axis.text.x = element_text(size = 20), 
         axis.text.y = element_text(size = 18), 

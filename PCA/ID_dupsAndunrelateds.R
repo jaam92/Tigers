@@ -10,7 +10,7 @@ setwd("~/Documents/Tigers/PCA")
 
 #Open files and prep
 popsDF = popsDF = read_csv("~/Documents/Tigers/IndivFiles/individual_ids.csv") %>%
-  mutate(combo = ifelse(Subspecies2 == "Unknown", paste(Subspecies2, "-", Phenotype, sep = ""), Subspecies2)) #metadata
+  mutate(combo = ifelse(Subspecies2 == "Generic", paste(Subspecies2, "-", Phenotype, sep = ""), Subspecies2)) #metadata
 
 #####Make gds files
 #files <- list.files(path="~/Documents/Tigers/PCA/plinkFiles", pattern="*.bed", full.names=TRUE, recursive=FALSE)
@@ -29,8 +29,6 @@ popsDF = popsDF = read_csv("~/Documents/Tigers/IndivFiles/individual_ids.csv") %
 # 
 #for (f in files) {
 #   print(f)
-#   
-#   #snpgdsBED2GDS(bed.fn = "highcov-only.ba-AN-MM-pcc-GM.bed", bim.fn = "highcov-only.ba-AN-MM-pcc-GM.bim", fam.fn = "highcov-only.ba-AN-MM-pcc-GM.fam", out.gdsfn = "highcov-only.ba-AN-MM-pcc-GM.gds", cvt.chr = "char")
 #   
 #   gds = snpgdsOpen(f) #open genofile
 #   sampIds = read.gdsn(index.gdsn(gds, "sample.id")) #grab sample ids 
@@ -83,7 +81,7 @@ popsDF = popsDF = read_csv("~/Documents/Tigers/IndivFiles/individual_ids.csv") %
 #   fnameUnrels = gsub("PCA/plinkFiles", "Relatedness/FindDups/SNPRelate/unrelateds_pcair", f)
 # 
 #   write.table(fullDataKinship, paste0(fnameKin,"_snpgdsIBDKING_Kinship.txt"), sep = "\t", quote = FALSE, col.names = TRUE, row.names = FALSE)
-#   write.table(unrelateds, paste0(fnameUnrels,"_unrelateds.txt"), sep = "\t", quote = TRUE, col.names = TRUE, row.names = FALSE)
+#   write.table(unrelateds, paste0(fnameUnrels,"_unrelateds.txt"), sep = "\t", quote = FALSE, col.names = TRUE, row.names = FALSE)
 # }
 
 #####Compare kinship and truffle to find duplicates
@@ -94,6 +92,7 @@ truffleFiles_LC <- list.files(path="~/Documents/Tigers/Relatedness/FindDups/all-
 #Keep only duplicates
 df = rbindlist(sapply(files, read.delim, simplify = FALSE), use.names = TRUE, idcol = "FileName") %>% 
   filter(value > 0.49) %>%
+  mutate(FileName = gsub(""))
   rename(ID1 = "Var1", ID2 = "Var2")
 
 truf_highCov = rbindlist(sapply(truffleFiles_HC, read.delim, simplify = FALSE), use.names = TRUE, idcol = "FNameTruff") %>% 

@@ -24,7 +24,7 @@ roh = read_delim("~/TigerProject/ROH/TrueROH_propCoveredwithin1SDMean_gr100kb_al
   left_join(popsDF, by = c("INDV" = "Individual")) %>%
   left_join(heterozygosity) %>%
   mutate(Heterozygosity = (N_SITES-O_HOM)/1476111759,
-         Subspecies2 = factor(Subspecies2, levels = c('Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran','Unknown')))
+         Subspecies2 = factor(Subspecies2, levels = c('Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran','Generic')))
 
 ####
 rohLengthsClass = roh %>%
@@ -44,7 +44,7 @@ FROH = rohLengthsClass %>%
 compareMeasures = FROH %>%
   select(Subspecies2, Froh, Fsnp) %>%
   pivot_longer(!Subspecies2, names_to = "Measure", values_to = "value") %>%
-  mutate(Subspecies2 = factor(Subspecies2, levels = c('Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran','Unknown')))
+  mutate(Subspecies2 = factor(Subspecies2, levels = c('Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran','Generic')))
 
 
 ggplot(compareMeasures, aes(x=Measure, y=value)) +

@@ -2,7 +2,7 @@ library(tidyverse)
 library(data.table)
 
 #Read ROH Files in 
-setwd("~/TigerProject/ROH")
+setwd("~/Documents/Tigers/ROH")
 
 df = read_delim("allChroms_allIndivs_garlicROH_700bpWindow_CoverageCallableSites.bed", delim = "\t", col_names = c("CHROM", "AUTO_START", "AUTO_END", "TYPE", "AUTO_LEN", "INDV",  "PropCovered"), col_types = "cnncncn")
 

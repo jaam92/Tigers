@@ -3,31 +3,35 @@ library(data.table)
 library(tidyverse)
 
 #Load files
-setwd("/scratch/users/elliea/jazlyn-ellie/captive-tigers/sfs/Polarize")
-
-fnames = list.files(pattern = "*_reformatted_masterFile_18SFS-ba-AN-MM-pcc-GM.vcf$")
+setwd("/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/sfs")
+fnames = list.files(path="/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/sfs/Polarize", pattern="*pcc.vcf.gz", full.names=TRUE, recursive=FALSE) #input vcfs
 pops = c("Generic","Amur","Bengal","Malayan","Sumatran")
 
 for (pop in pops){
-  indivs = read.delim("/scratch/users/elliea/jazlyn-ellie/captive-tigers/high-cov/18sAnd6s_annotated.txt") %>%
-    filter(SubSpecies == pop)
+  indivs = read.delim("/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/SampleLists/unrelateds_pcair/N10AndN6_unrelateds.txt") %>%
+  filter(Subspecies == pop & N10 == 1)
   
   #Empty data frame to fill with summary data
   summaryInfo = data.frame()
   
-  for (i in fnames){
-    vcf = fread(file=fnames[i]) %>% 
-      select(-c(V1)) #remove the null column that get's added
-    chrom = str_split_fixed(fnames[i], "_", 4)[3] #grab chromosome 
+  for (i in seq_along(fnames)){
+    chrom = str_split_fixed(fnames[i], "_", 4)[3] #grab chromosome
+    vcf = fread(file= fnames[i], sep = "\t",  fill = T) #read in vcf. fread does not like the hash and it forces you to add an extra column
     
-    #Change column names
-    colnames(vcf) = gsub(".*]","", colnames(vcf))
-    colnames(vcf) = gsub(":GT", "", colnames(vcf))
-    N18_indivs = colnames(vcf)[which(colnames(vcf) %in% indivs$Sample)]
+    #Modify column names
+    newColNames = colnames(vcf)[-length(colnames(vcf))] #grab column names and remove the extra column that gets added 
+    newColNames = gsub(".*]","", newColNames)
+    newColNames = gsub(":GT", "", newColNames)
+    
+    #After making column names re-add names and remove extra column from reading vcf in
+    vcf = vcf %>% 
+      select(-c("#[1]CHROM")) #remove the null column that gets added
+    colnames(vcf) = newColNames
+    sfs_indivs = colnames(vcf)[which(colnames(vcf) %in% indivs$ID)]
     
     #Reformat and replace patterns with allele counts value
     GTCounts = vcf %>%
-      select(all_of(N18_indivs)) %>%
+      select(all_of(sfs_indivs)) %>%
       filter_all(all_vars(. != "Missing")) %>% #remove any sites with missing data
       group_by_all() %>% 
       count() %>% #count of all patterns in rows
@@ -50,14 +54,13 @@ for (pop in pops){
       group_by(FreqBin) %>% 
       summarise(sum = sum(`GTCounts$Count`)) %>%
       mutate(chromosome = chrom)
-      
+    
     #Data frame with all chromosomes
     summaryInfo = bind_rows(summaryInfo, Polarized)
-  
+    
   }
-
-  write.table(summaryInfo, file = paste(i, "_SFS_allChroms_SummaryFile_N18.txt", sep = ""), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
-
-
+  
+  write.table(summaryInfo, file = paste0(pop, "_SFS_allChroms_SummaryFile_N10.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+  
+  
 }
-

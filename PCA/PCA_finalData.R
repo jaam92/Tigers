@@ -5,14 +5,15 @@ library(GWASTools)
 library(SNPRelate)
 
 #Set working directory and load files
-setwd("~/TigerProject/PCA")
-#snpgdsBED2GDS(bed.fn = "highcov-only.ba-AN-MM-pcc-GM.bed", bim.fn = "highcov-only.ba-AN-MM-pcc-GM.bim", fam.fn = "highcov-only.ba-AN-MM-pcc-GM.fam", out.gdsfn = "highcov-only.ba-AN-MM-pcc-GM.gds", cvt.chr = "char")
+setwd("~/Documents/TigerProject/PCA")
+set.seed(10192021)
+#snpgdsBED2GDS(bed.fn = "high-corr-nodups-biallelic-AN-MM-pcc.bed", bim.fn = "high-corr-nodups-biallelic-AN-MM-pcc.bim", fam.fn = "high-corr-nodups-biallelic-AN-MM-pcc.fam", out.gdsfn = "high-corr-nodups-biallelic-AN-MM-pcc.gds", cvt.chr = "char")
 
 #Open files and prep
-popsDF = popsDF = read_csv("~/TigerProject/IndivFiles/individual_ids.csv") %>%
-  mutate(combo = ifelse(Subspecies2 == "Unknown", paste(Subspecies2, "-", Phenotype, sep = ""), Subspecies2)) #metadata
+popsDF = popsDF = read_csv("~/Documents/Tigers/IndivFiles/individual_ids.csv") %>%
+  mutate(combo = ifelse(Subspecies2 == "Generic", paste(Subspecies2, "-", Phenotype, sep = ""), Subspecies2)) #metadata
 
-gds = snpgdsOpen("highcov-only.ba-AN-MM-pcc-GM.gds") #open genofile
+gds = snpgdsOpen("high-corr-nodups-biallelic-AN-MM-pcc.gds") #open genofile
 sampIds = read.gdsn(index.gdsn(gds, "sample.id")) #grab sample ids 
 famIds = as.data.frame(sampIds) %>%
   left_join(popsDF, by = c("sampIds"="Individual")) %>%
@@ -33,8 +34,7 @@ rownames(KINGmat) = KING$sample.id
 snpgdsClose(gds)
 
 #Reopen GDS data 
-set.seed(10192021)
-genoFile = GdsGenotypeReader(filename = "highcov-only.ba-AN-MM-pcc-GM.gds")#read in GDS data
+genoFile = GdsGenotypeReader(filename = "high-corr-nodups-biallelic-AN-MM-pcc.gds")#read in GDS data
 genoData = GenotypeData(genoFile)#create a GenotypeData class object
 
 ##Partition data into relateds and unrelated (less than first cousins)
@@ -74,7 +74,7 @@ snpgdsClose(gds)
 summary(correctedTigerpcAir)
 
 ##convert pcs to data frame
-pcs = correctedTigerpcAir$vectors
+pcs = TigerspcAir$vectors
 pc.df = as.data.frame(pcs)
 names(pc.df) = paste0("PC", 1:ncol(pcs))
 pc.df$sample.id = row.names(pcs)
@@ -83,13 +83,13 @@ pc.df$pheno = popsDF$combo[match(pc.df$sample.id, popsDF$Individual)]
 
 
 ####Plot ancestry adjusted PCA
-cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Unknown"="gray25", "Unknown-Orange" = "orange", "Unknown-SnowWhite" = "red", "Unknown-Golden"="gray80", "Unknown-White"="gray20")#palette
+cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25", "Generic-Orange" = "orange", "Generic-SnowWhite" = "red", "Generic-Golden"="gray80", "Generic-White"="gray20")#palette
 
 PC1vPC2 = ggplot(pc.df, aes(x=PC1, y=PC2, color=Subspecies)) + 
   geom_point(size = 4) + 
   scale_color_manual(values=cbPalette, name="Subspecies") + 
   theme_bw() + 
-  labs(y=bquote('PC2' ~'('~.(round(correctedTigerpcAir$values[2], digits = 3))~'%'~')'), x=bquote('PC1'~'('~.(round(correctedTigerpcAir$values[1], digits = 3))~'%'~')')) + 
+  labs(y=bquote('PC2' ~'('~.(round(TigerspcAir$values[2], digits = 3))~'%'~')'), x=bquote('PC1'~'('~.(round(TigerspcAir$values[1], digits = 3))~'%'~')')) + 
   theme(axis.text.x = element_text(size  = 20), 
         axis.text.y = element_text(size  = 20), 
         axis.title=element_text(size=24),
@@ -100,7 +100,7 @@ PC2vPC3 = ggplot(pc.df, aes(x=PC2, y=PC3, color=Subspecies)) +
   geom_point(size = 4) + 
   scale_color_manual(values=cbPalette, name="Subspecies") + 
   theme_bw() + 
-  labs(y=bquote('PC3' ~'('~.(round(correctedTigerpcAir$values[3], digits = 3))~'%'~')'), x=bquote('PC2'~'('~.(round(correctedTigerpcAir$values[2], digits = 3))~'%'~')')) + 
+  labs(y=bquote('PC3' ~'('~.(round(TigerspcAir$values[3], digits = 3))~'%'~')'), x=bquote('PC2'~'('~.(round(TigerspcAir$values[2], digits = 3))~'%'~')')) + 
   theme(axis.text.x = element_text(size  = 20), 
         axis.text.y = element_text(size  = 20), 
         axis.title=element_text(size=24),
@@ -108,11 +108,11 @@ PC2vPC3 = ggplot(pc.df, aes(x=PC2, y=PC3, color=Subspecies)) +
         legend.text=element_text(size=20))
 
 
-P1vPC2_pheno = ggplot(pc.df, aes(x=PC1, y=PC2, color=pheno)) + 
+PC1vPC2_pheno = ggplot(pc.df, aes(x=PC1, y=PC2, color=pheno)) + 
   geom_point(size = 4) + 
   scale_color_manual(values=cbPalette, name="Phenotype") + 
   theme_bw() + 
-  labs(y=bquote('PC2' ~'('~.(round(correctedTigerpcAir$values[2], digits = 3))~'%'~')'), x=bquote('PC1'~'('~.(round(correctedTigerpcAir$values[1], digits = 3))~'%'~')')) + 
+  labs(y=bquote('PC2' ~'('~.(round(TigerspcAir$values[2], digits = 3))~'%'~')'), x=bquote('PC1'~'('~.(round(TigerspcAir$values[1], digits = 3))~'%'~')')) + 
   theme(axis.text.x = element_text(size  = 20), 
         axis.text.y = element_text(size  = 20), 
         axis.title=element_text(size=24),

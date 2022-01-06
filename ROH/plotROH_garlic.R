@@ -2,14 +2,14 @@
 library(tidyverse)
 library(data.table)
 library(ggpubr)
-setwd("~/TigerProject/ROH/")
+setwd("~/Documents/Tigers/ROH/")
 
 #Load roh and FSNP and meta data
-popsDF = read_csv("~/TigerProject/IndivFiles/individual_ids.csv")
+popsDF = read_csv("~/Documents/Tigers/IndivFiles/individual_ids.csv")
 
-roh = read_delim("~/TigerProject/ROH/TrueROH_propCoveredwithin1SDMean_gr100kb_allChroms_highCov_runSpeciesSep_garlic.txt", delim = "\t") %>%
+roh = read_delim("~/Documents/Tigers/ROH/TrueROH_propCoveredwithin1SDMean_gr100kb_allChroms_highCov_runSpeciesSep_garlic.txt", delim = "\t") %>%
   left_join(popsDF, by = c("INDV" = "Individual")) %>%
-  mutate(Subspecies2 = factor(Subspecies2, levels = c('Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran','Unknown')))
+  mutate(Subspecies2 = factor(Subspecies2, levels = c('Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran','Generic')))
 
 rohLengthsClass = roh %>%
   group_by(INDV, TYPE) %>%
@@ -34,7 +34,7 @@ summaryTable = roh %>%
 ggtexttable(summaryTable, rows = NULL, theme = ttheme("mBlackWhite"))
 
 ##Plot data
-cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Unknown"="gray25", "Unknown-Orange" = "#CC79A7", "Unknown-SnowWhite" = "#867BCF", "Unknown-Golden"="darkseagreen3", "Unknown-White"="cornflowerblue")#palette
+cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25", "Generic-Orange" = "#CC79A7", "Generic-SnowWhite" = "#867BCF", "Generic-Golden"="darkseagreen3", "Generic-White"="cornflowerblue")#palette
 
 
 plotROHs = ggplot(rohLengthsClass, aes(x=Subspecies2, y=AUTO_LEN/10^6, fill=Subspecies2)) + 

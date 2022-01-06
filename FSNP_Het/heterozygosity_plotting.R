@@ -8,19 +8,19 @@ heterozygosity = read_delim('~/TigerProject/FSNP_Het/highcov-lowcov-nodups.ba-AN
 names(heterozygosity) = c('Individual','O_HOM', 'E_HOM', 'N_SITES','FSNP') #rename columns
 
 popsDF = read_csv("~/TigerProject/IndivFiles/individual_ids.csv") %>%
-  mutate(combo = ifelse(Subspecies == "Unknown", paste(Subspecies, "-", Phenotype, sep = ""), Subspecies))
+  mutate(combo = ifelse(Subspecies == "Generic", paste(Subspecies, "-", Phenotype, sep = ""), Subspecies))
 
 ####Make plotting data frame 
 all_nodups_full_highCov = heterozygosity %>%
   left_join(popsDF) %>%
   mutate(Heterozygosity = (N_SITES-O_HOM)/1476111759,
-         Subspecies2 = factor(Subspecies2, levels = c('Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran','Unknown'))) %>%
+         Subspecies2 = factor(Subspecies2, levels = c('Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran','Generic'))) %>%
   arrange(Subspecies2, Heterozygosity) %>%
   filter(Individual != 'T1' & Coverage == "High") #remove T1 and low coverage individuals
 
 
 ####Plot heterozygosity all-nodups ------------------------------------------
-cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Unknown"="gray25", "Unknown-Orange" = "#CC79A7", "Unknown-SnowWhite" = "#867BCF", "Unknown-Golden"="darkseagreen3", "Unknown-White"="cornflowerblue")#palette
+cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25", "Generic-Orange" = "#CC79A7", "Generic-SnowWhite" = "#867BCF", "Generic-Golden"="darkseagreen3", "Generic-White"="cornflowerblue")#palette
 
 #order individuals
 IDs = all_nodups_full_highCov$Individual 

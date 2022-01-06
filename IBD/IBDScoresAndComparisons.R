@@ -4,30 +4,33 @@ library(data.table)
 library(ggpubr)
 
 #Load ibdseq roh outputs and meta data
-setwd("~/TigerProject/IBD")
+setwd("~/Documents/Tigers/IBD")
 
-popsDF = read_csv("~/TigerProject/IndivFiles/individual_ids.csv") %>%
-  mutate(combo = ifelse(Subspecies == "Unknown", paste(Subspecies, "-", Phenotype, sep = ""), Subspecies))
+popsDF = read_csv("~/Documents/Tigers/IndivFiles/individual_ids.csv") %>%
+  mutate(combo = ifelse(Subspecies == "Generic", paste(Subspecies, "-", Phenotype, sep = ""), Subspecies))
+unrelateds = read_delim("~/Documents/Tigers/IndivFiles/N10AndN6_unrelateds.txt", delim = "\t")
 
-uSub1 = read.csv("~/TigerProject/IndivFiles/Unrelateds_basedOnSubspecies1_highCov.csv") #unrelated based on subspecies 1
+####Only needed to run this to generate the files initially 
+# df = read_delim("~/Documents/Tigers/IBD/allChroms_truffle_allSubSpecies_calledPerSpecies.segments.coverage.bed", delim = "\t", col_names = c("chrom","start","end", "sample1","sample2", "typeIBD", "IBDLengthMb", "PropCovered"), col_types = "cnncccnn") %>%
+#   group_by(chrom,start,end,sample1,sample2,IBDLengthMb,typeIBD) %>%
+#   summarise_at(c("PropCovered"), sum, na.rm = TRUE) %>%
+#   ungroup()  
+# 
+# ##Identify IBD greater than or equal to 2Mb and remove IBD where the avg. prop covered by SNPs is within 1 SD of the mean 
+# IBDgr2Mb = df[which(df$IBDLengthMb >= 2),][c("chrom","start","end", "sample1","sample2", "typeIBD", "IBDLengthMb", "PropCovered")]
+# z = data.table(IBDgr2Mb)
+# z[,ToKeep := abs(IBDgr2Mb$PropCovered - mean(IBDgr2Mb$PropCovered)) < sd(IBDgr2Mb$PropCovered)][ToKeep  == TRUE] #ID IBD to keep
+# 
+# write.table(z, "~/Documents/Tigers/IBD/TrueIBD_propCoveredwithin1SDMean_gr2Mb_allChroms_highCov_runSpeciesSep_truffle.txt", quote = F, row.names = F, col.names = T, sep = "\t")
 
-#####IBD from truffle is reported in Mbp
-df = read_delim("~/TigerProject/IBD/allChroms_truffle_allSubSpecies_calledPerSpecies.segments.coverage.bed", delim = "\t", col_names = c("chrom","start","end", "sample1","sample2", "typeIBD", "IBDLengthMb", "PropCovered"), col_types = "cnncccnn") %>%
-  group_by(chrom,start,end,sample1,sample2,IBDLengthMb,typeIBD) %>%
-  summarise_at(c("PropCovered"), sum, na.rm = TRUE) %>%
-  ungroup()  
+#IBD segments to keep (only include unrelateds)
+z = read_delim("~/Documents/Tigers/IBD/TrueIBD_propCoveredwithin1SDMean_gr2Mb_allChroms_highCov_runSpeciesSep_truffle.txt", delim = "\t")
 
-##Identify IBD greater than or equal to 2Mb and remove IBD where the avg. prop covered by SNPs is within 1 SD of the mean 
-IBDgr2Mb = df[which(df$IBDLengthMb >= 2),][c("chrom","start","end", "sample1","sample2", "typeIBD", "IBDLengthMb", "PropCovered")]
-z = data.table(IBDgr2Mb)
-z[,ToKeep := abs(IBDgr2Mb$PropCovered - mean(IBDgr2Mb$PropCovered)) < sd(IBDgr2Mb$PropCovered)][ToKeep  == TRUE] #ID IBD to keep
-
-#split on Subspecies 1
 dfIBD = z %>%
-  filter(ToKeep == "TRUE" & sample1%in%uSub1$Individual & sample2%in%uSub1$Individual) %>%
+  filter(ToKeep == "TRUE" & sample1 %in% unrelateds$ID & sample2 %in% unrelateds$ID) %>%
   mutate(ToKeep = NULL,
-         pop1 = popsDF$Subspecies[match(sample1, popsDF$Individual)],
-         pop2 = popsDF$Subspecies[match(sample2, popsDF$Individual)]) 
+         pop1 = popsDF$Subspecies2[match(sample1, popsDF$Individual)],
+         pop2 = popsDF$Subspecies2[match(sample2, popsDF$Individual)]) 
 
 groupScoreDF= dfIBD %>%
   filter(pop1 == pop2 & IBDLengthMb > 2 & IBDLengthMb <= 20) %>%
@@ -40,26 +43,25 @@ indivs = unique(c(unique(dfIBD$sample1), unique(dfIBD$sample2)))
 
 IBDScoreDF = popsDF %>%
   filter(Individual %in% indivs) %>%
-  group_by(Subspecies) %>%
+  group_by(Subspecies2) %>%
   count() %>%
   filter(n > 1) %>%
   mutate(normConstant = (choose(2*as.numeric(n), 2)) - as.numeric(n),
-         GroupScore = groupScoreDF$GroupScore[match(Subspecies, groupScoreDF$pop1)],
+         GroupScore = groupScoreDF$GroupScore[match(Subspecies2, groupScoreDF$pop1)],
          NormGroupScorePerMb = (GroupScore/normConstant)) %>%
   na.omit() #drop groups without ibd after filtering cut-offs
 
-IBDScoreDF$RelToGeneric = IBDScoreDF$NormGroupScorePerMb/IBDScoreDF[grep("Unknown$", IBDScoreDF$Subspecies),]$NormGroupScorePerMb
-
-
-write.table(IBDScoreDF, "~/TigerProject/IBD/IBDScores_subspecies1Unrelateds.txt", quote = F, row.names = F, col.names = T, sep = "\t") #write out to file
+IBDScoreDF$RelToGeneric = IBDScoreDF$NormGroupScorePerMb/IBDScoreDF[grep("Generic$", IBDScoreDF$Subspecies2),]$NormGroupScorePerMb
+#write.table(IBDScoreDF, "~/Documents/Tigers/IBD/IBDScores_subspecies2_unrelatedSamps.txt", quote = F, row.names = F, col.names = T, sep = "\t") #write out to file
 
 ##Plot data
-cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Unknown"="gray25", "Unknown-Orange" = "#CC79A7", "Unknown-SnowWhite" = "#867BCF", "Unknown-Golden"="darkseagreen3", "Unknown-White"="cornflowerblue")#palette
+cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25")#palette
+cbPalette_expanded = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25", "Generic-Orange" = "#CC79A7", "Generic-SnowWhite" = "#867BCF", "Generic-Golden"="darkseagreen3", "Generic-White"="cornflowerblue")#palette
 
-PlotIBDScores = ggplot(data = IBDScoreDF, aes(x=Subspecies, y=NormGroupScorePerMb)) +
-  geom_point(aes(colour = Subspecies), size = 2) +
-  labs(x="Sub-species", y="IBD Score (Mb)") +
-  scale_colour_manual(name = "Sub-species", values = cbPalette) +
+PlotIBDScores = ggplot(data = IBDScoreDF, aes(x=Subspecies2, y=NormGroupScorePerMb)) +
+  geom_point(aes(colour = Subspecies2), size = 2) +
+  labs(x="Subspecies", y="IBD Score (Mb)") +
+  scale_colour_manual(name = "Subspecies", values = cbPalette) +
   theme_bw() + 
   theme(axis.text.x = element_text(size = 20), 
         axis.text.y = element_text(size = 18), 
@@ -70,11 +72,11 @@ PlotIBDScores = ggplot(data = IBDScoreDF, aes(x=Subspecies, y=NormGroupScorePerM
 
 #plot relative to generic
 mid = mean(IBDScoreDF$RelToGeneric)
-PlotIBDRel2Generic = ggplot(IBDScoreDF, aes(y=RelToGeneric, x=Subspecies, fill=RelToGeneric)) + 
+PlotIBDRel2Generic = ggplot(IBDScoreDF, aes(y=RelToGeneric, x=Subspecies2, fill=RelToGeneric)) + 
   geom_bar(stat="identity") + 
   coord_flip() + 
   theme_bw() + 
-  labs(y = "Within Population IBD Score (Mb) Relative to Unknown\n Normalized by Sample Size", x="Sub-species") + 
+  labs(y = "Within Population IBD Score (Mb) Relative to Generic\n Normalized by Sample Size", x="Subspecies") + 
   geom_hline(yintercept = mid, linetype="dashed", colour = "black") + 
   theme(axis.text.x = element_text(size = 20), 
         axis.text.y = element_text(size = 18), 
@@ -85,4 +87,6 @@ PlotIBDRel2Generic = ggplot(IBDScoreDF, aes(y=RelToGeneric, x=Subspecies, fill=R
   scale_y_continuous(expand = c(0,0)) + 
   scale_fill_gradient(name= "Fold-Enrichment", low="blue" ,high="red")
 
-ggarrange(PlotIBDScores, PlotIBDRel2Generic, ncol = 2, align = 'h')
+#print plots
+print(PlotIBDScores)
+#ggarrange(PlotIBDScores, PlotIBDRel2Generic, ncol = 2, align = 'h')

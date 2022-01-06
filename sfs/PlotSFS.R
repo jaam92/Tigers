@@ -40,7 +40,7 @@ TotalCountsFolded = df %>%
 df$Proportional = df$data_fold/(TotalCountsFolded$TotalSites[match(df$Subspecies, TotalCountsFolded$Subspecies)]) #add column with proportion of sites
 
 #Now plot
-cbPalette = c("Generic" = "gray25", "Amur" = "#D55E00",  "Bengal" = "steelblue", "Malayan" = "#009E73", "Sumatran" = "gold3", "Indochinese" = "chocolate1", "Sanctuary" = "#CC79A7", "F1Wild" = "#867BCF", "Wild"="goldenrod2", "F2Wild"="coral2", "Captive"="cornflowerblue", "Unknown"="darkmagenta", "Zoo"="darkseagreen3") #palette
+cbPalette = c("Generic" = "gray25", "Amur" = "#D55E00",  "Bengal" = "steelblue", "Malayan" = "#009E73", "Sumatran" = "gold3", "Indochinese" = "chocolate1", "Sanctuary" = "#CC79A7", "F1Wild" = "#867BCF", "Wild"="goldenrod2", "F2Wild"="coral2", "Captive"="cornflowerblue", "Generic"="darkmagenta", "Zoo"="darkseagreen3") #palette
 
 
 propFoldedSFS_withGeneric = ggplot(df, aes(y=Proportional, x=bin, fill=Subspecies)) + 
