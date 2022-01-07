@@ -34,7 +34,8 @@ summaryTable = roh %>%
 ggtexttable(summaryTable, rows = NULL, theme = ttheme("mBlackWhite"))
 
 ##Plot data
-cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25", "Generic-Orange" = "#CC79A7", "Generic-SnowWhite" = "#867BCF", "Generic-Golden"="darkseagreen3", "Generic-White"="cornflowerblue")#palette
+cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25")#palette
+cbPalette_expanded = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25", "Generic-Orange" = "#CC79A7", "Generic-SnowWhite" = "#867BCF", "Generic-Golden"="darkseagreen3", "Generic-White"="cornflowerblue")#palette
 
 
 plotROHs = ggplot(rohLengthsClass, aes(x=Subspecies2, y=AUTO_LEN/10^6, fill=Subspecies2)) + 
@@ -62,7 +63,7 @@ plotFROH = ggplot(FROH, aes(x=Subspecies2, y=Froh)) +
         plot.title = element_text(size = 18, face = "bold", hjust = 0.5), 
         axis.title = element_text(size = 16),
         legend.title = element_text(size = 16),
-        legend.text = element_text(size = 14 ))
+        legend.text = element_text(size = 14 )) 
 
 print(plotFROH)
 

@@ -1,10 +1,10 @@
 #Load Libraries
-source("~/DogProject_Jaz/LocalRscripts/OMIA/R_rainclouds.R")
+source("~/Documents/DogProject_Jaz/LocalRscripts/OMIA/R_rainclouds.R")
 library(tidyverse)
 library(ggpubr)
 
 #Plotting fxn and color palette
-cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25", "Generic-Orange" = "#CC79A7", "Generic-SnowWhite" = "#867BCF", "Generic-Golden"="darkseagreen3", "Generic-White"="cornflowerblue")#palette
+cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25")#palette
 
 plotFxn = function(dataFrame, x_axisCol, y_axisCol, y_axisTitle) {
   RaincloudWithBoxPlot = ggplot(dataFrame, aes(x=x_axisCol, y=y_axisCol, colour=x_axisCol)) +
@@ -30,7 +30,7 @@ plotFxn = function(dataFrame, x_axisCol, y_axisCol, y_axisTitle) {
 }
 
 #Read file in 
-PlotDF = read_delim("~/TigerProject/AnnotSites/GTAnnotationCountResults_Oct2021_Tigers.txt", delim = "\t") %>%
+PlotDF = read_delim("~/Documents/Tigers/AnnotSites/GTAnnotationCountResults_Jan2022_Tigers.txt", delim = "\t") %>%
   mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>%
   mutate(CallableSites = LineCount - Missing)
 
@@ -43,9 +43,9 @@ PropPlotDF = PlotDF[,c(1:12, 18:23, 69:71)] %>%
 scaleCalls = mean(PlotDF$CallableSites)
 ScaledPlotDF = PropPlotDF %>%
   mutate_at(vars(NS_CountAlleles:LOF_CountVariants), list(~.*scaleCalls))
-#write.table(ScaledPlotDF, file = "~/TigerProject/AnnotSites/scaledGTAnnotationCountResults_Oct2021_Tigers.txt", col.names = TRUE, row.names = FALSE, quote = FALSE, sep = "\t")
+#write.table(ScaledPlotDF, file = "~/Documents/Tigers/AnnotSites/scaledGTAnnotationCountResults_Oct202_Tigers.txt", col.names = TRUE, row.names = FALSE, quote = FALSE, sep = "\t")
 
-###Plot Supplementary Figures putativeley neutral and deleterious
+###Plot Supplementary Figures putative neutral and deleterious
 CountDerHom_PutNeu = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies2 ,y_axisCol = PlotDF$PutNeuSIFT_CountDerHom, y_axisTitle = "Count derived neutral homozygotes")
 CountDerHom_PutDel = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies2 ,y_axisCol = PlotDF$PutDelSIFT_CountDerHom, y_axisTitle = "Count derived deleterious homozygotes")
 
