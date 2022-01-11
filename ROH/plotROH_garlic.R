@@ -36,12 +36,13 @@ summaryTable = roh %>%
 ggtexttable(summaryTable, rows = NULL, theme = ttheme("mBlackWhite"))
 
 ##Plot data
-cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25")#palette
-cbPalette_expanded = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25", "Generic-Orange" = "#CC79A7", "Generic-SnowWhite" = "#867BCF", "Generic-Golden"="darkseagreen3", "Generic-White"="cornflowerblue")#palette
+cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Indochinese" = "gold4", "South China" = "plum", "Sumatran" = "cornflowerblue", "Generic"="gray25")#palette
+cbPalette_expanded = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Indochinese" = "gold4", "South China" = "plum", "Sumatran" = "cornflowerblue", "Generic"="gray25", "Generic-Orange" = "#CC79A7", "Generic-SnowWhite" = "#867BCF", "Generic-Golden"="darkseagreen3", "Generic-White"="cornflowerblue")#palette
 
 
 plotROHs = ggplot(rohLengthsClass, aes(x=Subspecies2, y=AUTO_LEN/10^6, fill=Subspecies2)) + 
-  geom_boxplot() +
+  geom_violin() +
+  geom_jitter(height = 0, width = 0.1) +
   facet_wrap(~TYPE, scale="free") +
   scale_fill_manual(name = "Subspecies", values = cbPalette) +
   labs(x="Subspecies", y="Length of genome in ROH (Mb)") +
