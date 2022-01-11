@@ -9,17 +9,19 @@ popsDF = read_csv("~/Documents/Tigers/IndivFiles/individual_ids.csv")
 
 roh = read_delim("~/Documents/Tigers/ROH/TrueROH_propCoveredwithin1SDMean_gr100kb_allChroms_highCov_runSpeciesSep_garlic.txt", delim = "\t") %>%
   left_join(popsDF, by = c("INDV" = "Individual")) %>%
-  mutate(Subspecies2 = factor(Subspecies2, levels = c('Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran','Generic')))
+  mutate(Subspecies = NULL,
+         Subspecies2 = factor(Subspecies2, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran')))
 
 rohLengthsClass = roh %>%
   group_by(INDV, TYPE) %>%
   summarise_at(c("AUTO_LEN"), sum) %>%
   ungroup() %>%
-  left_join(popsDF,by = c("INDV" = "Individual"))
+  left_join(popsDF,by = c("INDV" = "Individual")) %>%
+  mutate(Subspecies2 = factor(Subspecies2, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran')))
 
 FROH = rohLengthsClass %>%
   filter(TYPE == "C") %>%
-  mutate(Froh = AUTO_LEN/2174711735)
+  mutate(Froh = AUTO_LEN/2174711735) 
 
 summaryTable = roh %>%
   arrange(TYPE, Subspecies2) %>%

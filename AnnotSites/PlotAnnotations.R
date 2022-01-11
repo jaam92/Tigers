@@ -9,30 +9,34 @@ cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", 
 plotFxn = function(dataFrame, x_axisCol, y_axisCol, y_axisTitle) {
   RaincloudWithBoxPlot = ggplot(dataFrame, aes(x=x_axisCol, y=y_axisCol, colour=x_axisCol)) +
     geom_flat_violin(size=1, position = position_nudge(x = .25, y = 0),adjust =2, trim = FALSE) +
-    geom_point(aes(x = x_axisCol, y = y_axisCol, 
-                   colour = x_axisCol), position = position_jitter(width = .05),
-               size = 1, shape = 20) +
+    geom_point(aes(x = x_axisCol, y = y_axisCol, colour = x_axisCol), 
+               position = position_jitter(width = .05),
+               size = 1, 
+               shape = 20) +
     geom_boxplot(aes(x = x_axisCol, y = y_axisCol, fill = x_axisCol),
-                 outlier.shape = NA, alpha = .5, width = .1, colour = "black") +
+                 outlier.shape = NA, 
+                 alpha = .5, 
+                 width = .1, 
+                 colour = "black") +
     coord_flip() +
-    guides(fill = FALSE, colour = FALSE) +
+    guides(fill = "none", colour = "none") +
     scale_colour_manual(values = cbPalette) +
     scale_fill_manual(values = cbPalette) + 
     labs(x="Subspecies",y=paste0(y_axisTitle)) + 
     theme_bw() + 
-    theme(axis.text.x = element_text(size=20, angle = 45, vjust=0.7), 
-          axis.text.y = element_text(size=20), 
-          plot.title=element_text(size=24, hjust = 0.5, face = "bold"), 
-          axis.title=element_text(size=24),
-          legend.title=element_text(size=20), 
-          legend.text=element_text(size=20))
+    theme(axis.text.x = element_text(hjust = 0.5, vjust = 0.5, size = 16), 
+          axis.text.y = element_text(size = 16), 
+          plot.title = element_text(size = 16, hjust = 0.5), 
+          axis.title = element_text(size = 16),
+          strip.text = element_text(size = 14))
   return(RaincloudWithBoxPlot)
 }
 
 #Read file in 
 PlotDF = read_delim("~/Documents/Tigers/AnnotSites/GTAnnotationCountResults_Jan2022_Tigers.txt", delim = "\t") %>%
   mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>%
-  mutate(CallableSites = LineCount - Missing)
+  mutate(CallableSites = LineCount - Missing,
+         Subspecies2 = factor(Subspecies2, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran')))
 
 
 ####Make Everything proportional 
@@ -43,7 +47,7 @@ PropPlotDF = PlotDF[,c(1:12, 18:23, 69:71)] %>%
 scaleCalls = mean(PlotDF$CallableSites)
 ScaledPlotDF = PropPlotDF %>%
   mutate_at(vars(NS_CountAlleles:LOF_CountVariants), list(~.*scaleCalls))
-#write.table(ScaledPlotDF, file = "~/Documents/Tigers/AnnotSites/scaledGTAnnotationCountResults_Oct202_Tigers.txt", col.names = TRUE, row.names = FALSE, quote = FALSE, sep = "\t")
+#write.table(ScaledPlotDF, file = "~/Documents/Tigers/AnnotSites/scaledGTAnnotationCountResults_Jan2022_Tigers.txt", col.names = TRUE, row.names = FALSE, quote = FALSE, sep = "\t")
 
 ###Plot Supplementary Figures putative neutral and deleterious
 CountDerHom_PutNeu = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies2 ,y_axisCol = PlotDF$PutNeuSIFT_CountDerHom, y_axisTitle = "Count derived neutral homozygotes")
@@ -61,20 +65,20 @@ putNeu = ggarrange( CountDerHom_PutNeu + theme(axis.title.y=element_blank(), axi
                     CountVar_PutNeu + theme(axis.title.y=element_blank(), axis.title.x=element_blank()) + ggtitle("Count Variants"),
                     CountAllele_PutNeu + theme(axis.title.y=element_blank(), axis.title.x=element_blank()) + ggtitle("Count Alleles"),
                     align = 'hv',
-                    labels = c("A", "B", "C"),
+                    #labels = c("A", "B", "C"),
                     hjust = -1,
                     nrow = 1)
-putNeuAnnot = annotate_figure(putNeu, left = text_grob("Neutral", size=24, face="bold",rot = 90, hjust = 0.5))
+putNeuAnnot = annotate_figure(putNeu, left = text_grob("Neutral", size=16, rot = 90, hjust = 0.5))
 
 #Deleterious
 putDel = ggarrange( CountDerHom_PutDel + theme(axis.title.y=element_blank(), axis.title.x=element_blank()),
                     CountVar_PutDel + theme(axis.title.y=element_blank(), axis.title.x=element_blank()),
                     CountAllele_PutDel + theme(axis.title.y=element_blank(), axis.title.x=element_blank()),
                     align = 'hv',
-                    labels = c("D", "E", "F"),
+                    #labels = c("D", "E", "F"),
                     hjust = -1,
                     nrow = 1)
-putDelAnnot = annotate_figure(putDel, left = text_grob("Deleterious", size=24, face="bold",rot = 90, hjust = 0.5))
+putDelAnnot = annotate_figure(putDel, left = text_grob("Deleterious", size=16, rot = 90, hjust = 0.5))
 
 #plot deleterious and neutral
 ggarrange(putNeuAnnot, putDelAnnot, nrow = 2)
@@ -94,20 +98,20 @@ scaledPutNeu = ggarrange( scaledCountDerHom_PutNeu + theme(axis.title.y=element_
                           scaledCountVar_PutNeu + theme(axis.title.y=element_blank(), axis.title.x=element_blank()) + ggtitle("Count of Variants"),
                           scaledCountAllele_PutNeu + theme(axis.title.y=element_blank(), axis.title.x=element_blank()) + ggtitle("Count of Alleles"),
                     align = 'hv',
-                    labels = c("A", "B", "C"),
+                    #labels = c("A", "B", "C"),
                     hjust = -1,
                     nrow = 1)
-scaledPutNeuAnnot = annotate_figure(scaledPutNeu, left = text_grob("Neutral", size=24, face="bold",rot = 90, hjust = 0.5))
+scaledPutNeuAnnot = annotate_figure(scaledPutNeu, left = text_grob("Neutral", size=16,rot = 90, hjust = 0.5))
 
 #Deleterious
 scaledPutDel = ggarrange( scaledCountDerHom_PutDel + theme(axis.title.y=element_blank(), axis.title.x=element_blank()),
                           scaledCountVar_PutDel + theme(axis.title.y=element_blank(), axis.title.x=element_blank()),
                           scaledCountAllele_PutDel + theme(axis.title.y=element_blank(), axis.title.x=element_blank()),
                     align = 'hv',
-                    labels = c("D", "E", "F"),
+                    #labels = c("D", "E", "F"),
                     hjust = -1,
                     nrow = 1)
-scaledPutDelAnnot = annotate_figure(scaledPutDel, left = text_grob("Deleterious", size=24, face="bold",rot = 90, hjust = 0.5))
+scaledPutDelAnnot = annotate_figure(scaledPutDel, left = text_grob("Deleterious", size=16,rot = 90, hjust = 0.5))
 
 #plot deleterious and neutral
 ggarrange(scaledPutNeuAnnot, scaledPutDelAnnot, nrow = 2)
