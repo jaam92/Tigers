@@ -7,6 +7,7 @@ setwd("/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/sfs")
 fnames = list.files(path="/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/sfs/Polarize", pattern="*pcc.vcf.gz", full.names=TRUE, recursive=FALSE) #input vcfs
 #pops = c("Generic","Amur","Bengal","Malayan","Sumatran") #for N10
 pops = c("Generic","Amur","Bengal","Malayan","Sumatran", "Indochinese") #for N6
+#pops = c("Generic","Amur","Bengal","Malayan","Sumatran", "Indochinese", "South China") #for N3
 
 for (pop in pops){
   indivs = read.delim("/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/SampleLists/unrelateds_pcair/N10AndN6_unrelateds.txt") %>%

@@ -5,7 +5,9 @@ library(tidyverse)
 #Load files
 setwd("~/Documents/TigerProject/Rscripts/sfs")
 fnames = list.files(path="~/Documents/Tigers/AnnotSites/PolarizedVCFs", pattern="*pcc.vcf.gz", full.names=TRUE, recursive=FALSE) #input vcfs
-pops = c("Generic","Amur","Bengal","Malayan","Sumatran")
+pops = c("Generic","Amur","Bengal","Malayan","Sumatran") #for N10
+#pops = c("Generic","Amur","Bengal","Malayan","Sumatran", "Indochinese") #for N6
+#pops = c("Generic","Amur","Bengal","Malayan","Sumatran", "Indochinese", "South China") #for N3
 
 for (pop in pops){
   indivs = read.delim("~/Documents/Tigers/IndivFiles/N10AndN6_unrelateds.txt") %>%
