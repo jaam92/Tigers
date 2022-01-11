@@ -5,17 +5,18 @@ library(tidyverse)
 #Load files
 setwd("/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/sfs")
 fnames = list.files(path="/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/sfs/Polarize", pattern="*pcc.vcf.gz", full.names=TRUE, recursive=FALSE) #input vcfs
-pops = c("Generic","Amur","Bengal","Malayan","Sumatran")
+#pops = c("Generic","Amur","Bengal","Malayan","Sumatran") #for N10
+pops = c("Generic","Amur","Bengal","Malayan","Sumatran", "Indochinese") #for N6
 
 for (pop in pops){
   indivs = read.delim("/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/SampleLists/unrelateds_pcair/N10AndN6_unrelateds.txt") %>%
-  filter(Subspecies == pop & N10 == 1)
+  filter(Subspecies == pop & N6 == 1)
   
   #Empty data frame to fill with summary data
   summaryInfo = data.frame()
   
   for (i in seq_along(fnames)){
-    chrom = str_split_fixed(fnames[i], "_", 4)[3] #grab chromosome
+    chrom = str_split_fixed(fnames[i], "_", 5)[4] #grab chromosome
     vcf = fread(file= fnames[i], sep = "\t",  fill = T) #read in vcf. fread does not like the hash and it forces you to add an extra column
     
     #Modify column names
@@ -60,7 +61,7 @@ for (pop in pops){
     
   }
   
-  write.table(summaryInfo, file = paste0(pop, "_SFS_allChroms_SummaryFile_N10.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+  write.table(summaryInfo, file = paste0(pop, "_SFS_allChroms_SummaryFile_N6.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
   
   
 }
