@@ -7,13 +7,13 @@ setwd("~/Documents/Tigers/FSNP_Het")
 heterozygosity = read_delim('~/Documents/Tigers/FSNP_Het/allSamp.het', delim = '\t', col_names = TRUE)
 colnames(heterozygosity) = c('Individual','O_HOM', 'E_HOM', 'N_SITES','FSNP') #rename columns
 
-popsDF = read_csv("~/TigerProject/IndivFiles/individual_ids.csv") %>%
+popsDF = read_csv("~/Documents/Tigers/IndivFiles/individual_ids.csv") %>%
   mutate(combo = ifelse(Subspecies2 == "Generic", paste(Subspecies2, "-", Phenotype, sep = ""), Subspecies2))
 
 ####Make plotting data frame 
 all_nodups_full_highCov = heterozygosity %>%
   left_join(popsDF) %>%
-  filter() %>%
+  filter(!Individual %in% indivsToRemove) %>%
   mutate(Heterozygosity = (N_SITES-O_HOM)/1476111759,
          Subspecies2 = factor(Subspecies2, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran')),
          BoundFSNP = ifelse(FSNP < 0, 0, FSNP),
@@ -22,7 +22,7 @@ all_nodups_full_highCov = heterozygosity %>%
 
 
 ####Plot heterozygosity all-nodups ------------------------------------------
-cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25")#palette
+cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Indochinese" = "gold4", "Sumatran" = "cornflowerblue", "South China" = "plum", "Generic"="gray25")#palette
 cbPalette_expanded = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25", "Generic-Orange" = "#CC79A7", "Generic-SnowWhite" = "#867BCF", "Generic-Golden"="darkseagreen3", "Generic-White"="cornflowerblue")#palette
 
 #order individuals
@@ -47,7 +47,7 @@ LolliPlotHet = ggplot(all_nodups_full_highCov, aes(x=Individual, y=Heterozygosit
         panel.grid = element_blank())
 
 #violin plots
-#jpeg(file="heterozygosity-vcftools-calledPerSubspecies-nodups-high-cov.jpeg", width = 800, height = 500, res = 100)
+#jpeg(file="heterozygosity-vcftools-calledPerSubspecies-nodups-high-cov.jpeg", width = 1100, height = 550, res = 100)
 VioPlotHet = ggplot(all_nodups_full_highCov, aes(x=Subspecies2, y=Heterozygosity)) +
   geom_violin(aes(fill=Subspecies2)) + 
   geom_jitter(height = 0, width = 0.1) +
@@ -68,6 +68,7 @@ VioPlotHet = ggplot(all_nodups_full_highCov, aes(x=Subspecies2, y=Heterozygosity
 plotFSNP = ggplot(all_nodups_full_highCov, aes(x=Subspecies2, y=FSNP)) +
   geom_violin(aes(fill=Subspecies2)) + 
   geom_jitter(height = 0, width = 0.1) +
+  scale_y_continuous(breaks=seq(0,1,0.1)) +
   scale_fill_manual(name = "Subspecies", values = cbPalette) + 
   labs(x="Subspecies", y=expression(F[SNP])) + 
   theme_bw() + 

@@ -8,7 +8,7 @@ setwd("~/Documents/Tigers/IBD")
 
 popsDF = read_csv("~/Documents/Tigers/IndivFiles/individual_ids.csv") %>%
   mutate(combo = ifelse(Subspecies2 == "Generic", paste(Subspecies2, "-", Phenotype, sep = ""), Subspecies))
-unrelateds = read_delim("~/Documents/Tigers/IndivFiles/N10AndN6AndN3_unrelateds.txt", delim = "\t")
+unrelateds = read_delim("~/Documents/Tigers/IndivFiles/N10-N6-N3_unrelateds.txt", delim = "\t")
 
 ###Only needed to run this to generate the files initially
 df = read_delim("~/Documents/Tigers/IBD/allChroms_truffle_allSubSpecies_calledPerSpecies.segments.coverage.bed", delim = "\t", col_names = c("chrom","start","end", "sample1","sample2", "typeIBD", "IBDLengthMb", "PropCovered"), col_types = "cnncccnn") %>%
@@ -27,7 +27,7 @@ z[,ToKeep := abs(IBDgr2Mb$PropCovered - mean(IBDgr2Mb$PropCovered)) < sd(IBDgr2M
 z = read_delim("~/Documents/Tigers/IBD/TrueIBD_propCoveredwithin1SDMean_gr2Mb_allChroms_highCov_runSpeciesSep_truffle.txt", delim = "\t") 
 
 dfIBD = z %>%
-  filter(ToKeep == "TRUE" & sample1 %in% unrelateds$ID & sample2 %in% unrelateds$ID) %>%
+  filter(ToKeep == "TRUE" & sample1 %in% unrelateds$unrelsID & sample2 %in% unrelateds$unrelsID) %>%
   mutate(ToKeep = NULL,
          pop1 = popsDF$Subspecies2[match(sample1, popsDF$Individual)],
          pop2 = popsDF$Subspecies2[match(sample2, popsDF$Individual)]) 

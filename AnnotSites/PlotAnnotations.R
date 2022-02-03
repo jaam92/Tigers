@@ -36,7 +36,9 @@ plotFxn = function(dataFrame, x_axisCol, y_axisCol, y_axisTitle) {
 PlotDF = read_delim("~/Documents/Tigers/AnnotSites/GTAnnotationCountResults_Jan2022_Tigers.txt", delim = "\t") %>%
   mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>%
   mutate(CallableSites = LineCount - Missing,
-         Subspecies2 = factor(Subspecies2, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran')))
+         Subspecies2 = factor(Subspecies2, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran'))) %>%
+  filter(!ID %in% indivsToRemove & Missing < 2500) 
+  
 
 
 ####Make Everything proportional 
@@ -46,8 +48,10 @@ PropPlotDF = PlotDF[,c(1:12, 18:23, 69:71)] %>%
 ####Make Scaled Count Alleles
 scaleCalls = mean(PlotDF$CallableSites)
 ScaledPlotDF = PropPlotDF %>%
-  mutate_at(vars(NS_CountAlleles:LOF_CountVariants), list(~.*scaleCalls))
-#write.table(ScaledPlotDF, file = "~/Documents/Tigers/AnnotSites/scaledGTAnnotationCountResults_Jan2022_Tigers.txt", col.names = TRUE, row.names = FALSE, quote = FALSE, sep = "\t")
+  mutate_at(vars(NS_CountAlleles:LOF_CountVariants), list(~.*scaleCalls)) %>%
+  mutate_if(is.numeric, ceiling)
+
+write.table(ScaledPlotDF, file = "~/Documents/Tigers/AnnotSites/scaledGTAnnotationCountResults_Jan2022_Tigers.txt", col.names = TRUE, row.names = FALSE, quote = FALSE, sep = "\t")
 
 ###Plot Supplementary Figures putative neutral and deleterious
 CountDerHom_PutNeu = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies2 ,y_axisCol = PlotDF$PutNeuSIFT_CountDerHom, y_axisTitle = "Count derived neutral homozygotes")
@@ -125,14 +129,16 @@ pairwise.wilcox.test(ScaledPlotDF$PutDelSIFT_CountAlleles, ScaledPlotDF$Subspeci
 
 
 ####combine with FSNP and FROH
-source(file = "~/TigerProject/FSNP_Het/heterozygosity_plotting.R")
-source(file = "~/TigerProject/ROH/plotROH_garlic.R")
+source(file = "~/Documents/Tigers/FSNP_Het/heterozygosity_plotting.R")
+source(file = "~/Documents/Tigers/ROH/plotROH_garlic.R")
 
 mergedPlotDF = ScaledPlotDF %>%
   mutate(FROH = FROH$Froh[match(ID, FROH$INDV)],
-         FSNP = all_nodups_full_highCov$FSNP[match(ID, all_nodups_full_highCov$Individual)]) %>%
+         FSNP = all_nodups_full_highCov$FSNP[match(ID, all_nodups_full_highCov$Individual)],
+         Heterozygosity = all_nodups_full_highCov$Heterozygosity[match(ID, all_nodups_full_highCov$Individual)]) %>%
   na.omit(FSNP) %>%
-  na.omit(FROH)
+  na.omit(FROH) %>%
+  na.omit(Heterozygosity)
 
 
 putDelAllele_FROH = ggplot(mergedPlotDF, aes(x=FROH, y=PutDelSIFT_CountAlleles)) +

@@ -10,8 +10,8 @@ pops = c("Generic","Amur","Bengal","Malayan","Sumatran") #for N10
 #pops = c("Generic","Amur","Bengal","Malayan","Sumatran", "Indochinese", "South China") #for N3
 
 for (pop in pops){
-  indivs = read.delim("~/Documents/Tigers/IndivFiles/N10AndN6_unrelateds.txt") %>%
-    filter(Subspecies == pop & N10 == 1)
+  indivs = read.delim("~/Documents/Tigers/Relatedness/FindDups/SNPRelate/unrelateds_pcair/N10-N6-N3_unrelateds.txt") %>%
+    filter(Subspecies2 == pop & N10 == 1)
   
   #Empty data frame to fill with summary data
   summaryInfo = data.frame()
@@ -29,7 +29,7 @@ for (pop in pops){
     vcf = vcf %>% 
       select(-c("#[1]CHROM")) #remove the null column that gets added
     colnames(vcf) = newColNames
-    sfs_indivs = colnames(vcf)[which(colnames(vcf) %in% indivs$ID)]
+    sfs_indivs = colnames(vcf)[which(colnames(vcf) %in% indivs$unrelsID)]
     
     #Reformat and replace patterns with allele counts value
     GTCounts = vcf %>%
