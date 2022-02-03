@@ -101,8 +101,7 @@ UnfoldedSFS_N10 = ggplot(PlottingUnfolded, aes(y=Proportional, x=FreqBin, fill=S
         axis.text.y = element_text(size  = 20), 
         plot.title=element_text(size = 20, face = "bold", hjust = 0.5), 
         axis.title=element_blank(),
-        legend.title = element_text(size = 18),
-        legend.text = element_text(size = 16)) 
+        legend.position = "none") 
 
 FoldedSFS_N10 = ggplot(PlottingFolded, aes(y=Proportional, x=bin, fill=Subspecies)) + 
   geom_bar(stat = "identity", position = position_dodge(width = 0.9))  +
@@ -117,8 +116,7 @@ FoldedSFS_N10 = ggplot(PlottingFolded, aes(y=Proportional, x=bin, fill=Subspecie
         axis.text.y = element_text(size  = 20), 
         plot.title=element_blank(), 
         axis.title=element_blank(),
-        legend.title = element_text(size = 18),
-        legend.text = element_text(size = 16)) 
+        legend.position = "none") 
 
 UnfoldedSFS_N6 = ggplot(PlottingUnfolded_N6, aes(y=Proportional, x=FreqBin, fill=Subspecies)) + 
   geom_bar(stat = "identity", position = position_dodge(width = 0.9))  +
@@ -150,14 +148,12 @@ FoldedSFS_N6 = ggplot(PlottingFolded_N6, aes(y=Proportional, x=bin, fill=Subspec
         axis.text.y = element_text(size  = 20), 
         plot.title=element_blank(), 
         axis.title=element_blank(),
-        legend.title = element_text(size = 18),
-        legend.text = element_text(size = 16)) 
+        legend.position = "none") 
 
 
 allSFS = ggarrange(UnfoldedSFS_N10, UnfoldedSFS_N6, FoldedSFS_N10, FoldedSFS_N6, 
                    labels = c("A","B","C","D"), font.label = list(size = 18), 
-                   nrow = 2, ncol = 2, 
-                   common.legend = TRUE, legend = "none" )
+                   nrow = 2, ncol = 2)
 
 allSFS_axes = annotate_figure(allSFS, 
                                   left = text_grob("Proportion of variable sites", 
