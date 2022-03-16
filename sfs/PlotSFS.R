@@ -42,14 +42,14 @@ PlottingFolded = unfoldedDF %>%
   group_modify(~ fold(.x$WholeGenomeCounts, n = 20)) %>% #this n = num chroms
   ungroup() %>%
   mutate(bin = rep(seq(1:10), length.out = n()),
-         Subspecies = factor(Subspecies, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran')))
+         Subspecies = factor(Subspecies, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'Sumatran')))
 
 PlottingUnfolded = unfoldedDF %>%
   filter(FreqBin > 0 & FreqBin < 20) %>% #remove fixed stuff
   group_by(Subspecies, FreqBin) %>%
   summarise(WholeGenomeCounts = sum(sum)) %>%
   ungroup() %>%
-  mutate(Subspecies = factor(Subspecies, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran')))
+  mutate(Subspecies = factor(Subspecies, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'Sumatran')))
 
 TotalCounts = PlottingUnfolded %>%
   group_by(Subspecies) %>%
@@ -68,14 +68,14 @@ PlottingFolded_N6 = unfoldedDF_N6 %>%
   group_modify(~ fold(.x$WholeGenomeCounts, n = 12)) %>% #this n = num chroms
   ungroup() %>%
   mutate(bin = rep(seq(1:6), length.out = n()),
-         Subspecies = factor(Subspecies, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran')))
+         Subspecies = factor(Subspecies, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'Sumatran')))
 
 PlottingUnfolded_N6 = unfoldedDF_N6 %>%
   filter(FreqBin > 0 & FreqBin < 12) %>% #remove fixed stuff
   group_by(Subspecies, FreqBin) %>%
   summarise(WholeGenomeCounts = sum(sum)) %>%
   ungroup() %>%
-  mutate(Subspecies = factor(Subspecies, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran')))
+  mutate(Subspecies = factor(Subspecies, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'Sumatran')))
 
 TotalCounts_N6 = PlottingUnfolded_N6 %>%
   group_by(Subspecies) %>%
@@ -83,10 +83,10 @@ TotalCounts_N6 = PlottingUnfolded_N6 %>%
 
 PlottingUnfolded_N6$Proportional = PlottingUnfolded_N6$WholeGenomeCounts/(TotalCounts_N6$TotalSites[match(PlottingUnfolded_N6$Subspecies, TotalCounts_N6$Subspecies)])
 
-PlottingFolded_N6$Proportional = PlottingFolded_N6$data_fold/(TotalCounts$TotalSites[match(PlottingFolded_N6$Subspecies, TotalCounts_N6$Subspecies)])
+PlottingFolded_N6$Proportional = PlottingFolded_N6$data_fold/(TotalCounts_N6$TotalSites[match(PlottingFolded_N6$Subspecies, TotalCounts_N6$Subspecies)])
 
 ####Plotting
-cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25")#palette
+cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "Generic"="gray25")#palette
 
 UnfoldedSFS_N10 = ggplot(PlottingUnfolded, aes(y=Proportional, x=FreqBin, fill=Subspecies)) + 
   geom_bar(stat = "identity", position = position_dodge(width = 0.9))  +
@@ -106,7 +106,7 @@ UnfoldedSFS_N10 = ggplot(PlottingUnfolded, aes(y=Proportional, x=FreqBin, fill=S
 FoldedSFS_N10 = ggplot(PlottingFolded, aes(y=Proportional, x=bin, fill=Subspecies)) + 
   geom_bar(stat = "identity", position = position_dodge(width = 0.9))  +
   scale_x_continuous(breaks=1:10) + 
-  ylim(0,0.8)+
+  ylim(0,0.4)+
   scale_fill_manual(values= cbPalette) + 
   labs(x = "SNP Frequency", 
        y= "Proportion of SNPs", 
@@ -138,7 +138,7 @@ UnfoldedSFS_N6 = ggplot(PlottingUnfolded_N6, aes(y=Proportional, x=FreqBin, fill
 FoldedSFS_N6 = ggplot(PlottingFolded_N6, aes(y=Proportional, x=bin, fill=Subspecies)) + 
   geom_bar(stat = "identity", position = position_dodge(width = 0.9))  +
   scale_x_continuous(breaks=1:6) + 
-  ylim(0,0.8)+
+  ylim(0,0.4)+
   scale_fill_manual(values= cbPalette) + 
   labs(x = "SNP Frequency", 
        y= "Proportion of SNPs", 
