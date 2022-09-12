@@ -32,6 +32,11 @@ tabix -p vcf genotypes.highcov.biallelic.renameChroms.vcf.gz
 bcftools view -e 'QUAL < 20 || DP > 3000 || DP < 177' genotypes.highcov.biallelic.pCC.AN.vcf.gz -O z -o genotypes.highcov.biallelic.AN.pCC.DPQUAL.vcf.gz
 ```
 
+Filter out low mappability sites
+```
+bedtools subtract -a genotypes.highcov.biallelic.AN.pCC.DPQUAL.vcf.gz -b PanTig-genmap1.0.chromrename.bed
+```
+
 Merge with low coverage file
 ```
 bcftools merge genotypes.highcov.biallelic.putativeCatChroms.ANfilt.vcf.gz lowcov-all86-impute.biallelic.putativeCatChroms.vcf.gz -O z -o highcov-lowcov-biallelic-AN-pCC.vcf.gz 
