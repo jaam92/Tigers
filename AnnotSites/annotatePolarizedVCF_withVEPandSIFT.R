@@ -14,7 +14,7 @@ for (j in chrom) {
   #Load file
   annotation = read_delim(file=paste0("~/Documents/Tigers/AnnotSites/Annotations/", j ,"_VEPandSIFT_felCat8_withTigerREFALT.txt"), delim="\t")
   
-  infileVCF = fread(file = paste0("~/Documents/Tigers/AnnotSites/PolarizedVCFs/AssignGT_CactusAncasREF_chr", j ,"_reformatted_masterFile_18SFS-ba-AN-MM-pcc-GM.vcf"), sep = "\t",  fill = T) #read in vcf fread does not like the hash and it forces you to add an extra column
+  infileVCF = fread(file = paste0("~/Documents/Tigers/AnnotSites/PolarizedVCFs/AssignGT_CactusAncasREF_chr", j ,"_reformatted_masterFile_20FMISSDP5.highcov.nodups.highcov.biallelic.AN.pCC.DPQUALtest.genmap.vcf"), sep = "\t",  fill = T) #read in vcf fread does not like the hash and it forces you to add an extra column
   
   #Modify column names
   newColNames = colnames(infileVCF)[-length(colnames(infileVCF))] #grab column names and remove the extra column that gets added 
@@ -22,7 +22,7 @@ for (j in chrom) {
   
   #After making column names re-add names and remove extra column from reading vcf in
   infileVCF = infileVCF %>% 
-    select(-c("#[1]CHROM")) #remove the null column that gets added
+    select(-c("# [1]CHROM")) #remove the null column that gets added
   colnames(infileVCF) = newColNames
   
   #Add annotations
@@ -31,7 +31,7 @@ for (j in chrom) {
     mutate(ANNOT = annotation$recodeConsequence[match(POS,annotation$tigerPos)],
            IMPACT = annotation$IMPACT[match(POS,annotation$tigerPos)],
            SIFT = annotation$SIFT_Consequence[match(POS,annotation$tigerPos)])
-  rm(vcf) #make some space
+  rm(infileVCF) #make some space
   
   #Grab individuals
   indivs = colnames(annotatedVCF)[str_detect(colnames(annotatedVCF),"GT")]
