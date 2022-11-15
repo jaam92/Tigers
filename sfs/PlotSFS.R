@@ -60,8 +60,22 @@ PlottingUnfolded$Proportional = PlottingUnfolded$WholeGenomeCounts/(TotalCounts$
 PlottingFolded$Proportional = PlottingFolded$data_fold/(TotalCounts$TotalSites[match(PlottingFolded$Subspecies, TotalCounts$Subspecies)])
 
 ###N6
+Indochinese = unfoldedDF_N6 %>%
+  filter(Subspecies == "Indochinese") 
+
+Indochinese_addBins = unfoldedDF_N6 %>%
+  filter(Subspecies == "Amur") %>%
+  mutate(sum = 0,
+         Subspecies = "Indochinese") %>%
+  left_join(Indochinese, by = c("Subspecies", "FreqBin","chromosome")) %>%
+  mutate(sum = ifelse(is.na(sum.y), sum.x, sum.y)) %>%
+  select("Subspecies", "FreqBin", "sum", "chromosome")
+  
+
 PlottingFolded_N6 = unfoldedDF_N6 %>%
-  group_by(Subspecies, FreqBin) %>%
+  filter(Subspecies != "Indochinese") %>%
+  rbind.data.frame(Indochinese_addBins) %>%
+  group_by(Subspecies, FreqBin) %>% 
   summarise(WholeGenomeCounts = sum(sum)) %>%
   ungroup() %>%
   group_by(Subspecies) %>%
@@ -71,6 +85,8 @@ PlottingFolded_N6 = unfoldedDF_N6 %>%
          Subspecies = factor(Subspecies, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'Sumatran')))
 
 PlottingUnfolded_N6 = unfoldedDF_N6 %>%
+  filter(Subspecies != "Indochinese") %>%
+  rbind.data.frame(Indochinese_addBins) %>%
   filter(FreqBin > 0 & FreqBin < 12) %>% #remove fixed stuff
   group_by(Subspecies, FreqBin) %>%
   summarise(WholeGenomeCounts = sum(sum)) %>%
@@ -91,7 +107,7 @@ cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", 
 UnfoldedSFS_N10 = ggplot(PlottingUnfolded, aes(y=Proportional, x=FreqBin, fill=Subspecies)) + 
   geom_bar(stat = "identity", position = position_dodge(width = 0.9))  +
   scale_x_continuous(breaks=1:19) + 
-  ylim(0,0.4)+
+  ylim(0,0.5)+
   scale_fill_manual(values= cbPalette) + 
   labs(x = "SNP Frequency", 
        y= "Proportion of SNPs", 
@@ -106,7 +122,7 @@ UnfoldedSFS_N10 = ggplot(PlottingUnfolded, aes(y=Proportional, x=FreqBin, fill=S
 FoldedSFS_N10 = ggplot(PlottingFolded, aes(y=Proportional, x=bin, fill=Subspecies)) + 
   geom_bar(stat = "identity", position = position_dodge(width = 0.9))  +
   scale_x_continuous(breaks=1:10) + 
-  ylim(0,0.4)+
+  ylim(0,0.5)+
   scale_fill_manual(values= cbPalette) + 
   labs(x = "SNP Frequency", 
        y= "Proportion of SNPs", 
@@ -118,10 +134,10 @@ FoldedSFS_N10 = ggplot(PlottingFolded, aes(y=Proportional, x=bin, fill=Subspecie
         axis.title=element_blank(),
         legend.position = "none") 
 
-UnfoldedSFS_N6 = ggplot(PlottingUnfolded_N6, aes(y=Proportional, x=FreqBin, fill=Subspecies)) + 
+UnfoldedSFS_N6 = ggplot(PlottingUnfolded_N6, aes(y=Proportional, x=FreqBin, fill=Subspecies)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.9))  +
   scale_x_continuous(breaks=1:11) + 
-  ylim(0,0.4)+
+  ylim(0,0.5)+
   scale_fill_manual(values= cbPalette) + 
   labs(x = "SNP Frequency", 
        y= "Proportion of SNPs", 
@@ -138,7 +154,7 @@ UnfoldedSFS_N6 = ggplot(PlottingUnfolded_N6, aes(y=Proportional, x=FreqBin, fill
 FoldedSFS_N6 = ggplot(PlottingFolded_N6, aes(y=Proportional, x=bin, fill=Subspecies)) + 
   geom_bar(stat = "identity", position = position_dodge(width = 0.9))  +
   scale_x_continuous(breaks=1:6) + 
-  ylim(0,0.4)+
+  ylim(0,0.5)+
   scale_fill_manual(values= cbPalette) + 
   labs(x = "SNP Frequency", 
        y= "Proportion of SNPs", 
