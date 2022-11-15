@@ -1,23 +1,24 @@
 #Load Libraries
 library(data.table)
+setDTthreads(threads = 4)
 library(tidyverse)
 
 #Load files
-setwd("/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/sfs")
-fnames = list.files(path="/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/sfs/Polarize", pattern="*pcc.vcf.gz", full.names=TRUE, recursive=FALSE) #input vcfs
+setwd("/scratch/users/elliea/jazlyn-ellie/oct2022-captives-usethese/sfs")
+fnames = list.files(path="/scratch/users/elliea/jazlyn-ellie/oct2022-captives-usethese/sfs/Polarize", pattern="*genmap.vcf", full.names=TRUE, recursive=FALSE) #input vcfs
 #pops = c("Generic","Amur","Bengal","Malayan","Sumatran") #for N10
 pops = c("Generic","Amur","Bengal","Malayan","Sumatran", "Indochinese") #for N6
-#pops = c("Generic","Amur","Bengal","Malayan","Sumatran", "Indochinese", "South China") #for N3
+
 
 for (pop in pops){
-  indivs = read.delim("/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/SampleLists/unrelateds_pcair/N10-N6-N3_unrelateds.txt") %>%
-  filter(Subspecies2 == pop & N6 == 1)
+  indivs = read.delim("/scratch/users/elliea/jazlyn-ellie/oct2022-captives-usethese/IndivFiles/N10-N6_unrelateds.txt") %>%
+    filter(Population == pop & N6 == 1)
   
   #Empty data frame to fill with summary data
   summaryInfo = data.frame()
   
   for (i in seq_along(fnames)){
-    chrom = str_split_fixed(fnames[i], "_", 5)[4] #grab chromosome
+    chrom = str_split_fixed(fnames[i], "_", 5)[3] #grab chromosome
     vcf = fread(file= fnames[i], sep = "\t",  fill = T) #read in vcf. fread does not like the hash and it forces you to add an extra column
     
     #Modify column names
@@ -27,9 +28,9 @@ for (pop in pops){
     
     #After making column names re-add names and remove extra column from reading vcf in
     vcf = vcf %>% 
-      select(-c("#[1]CHROM")) #remove the null column that gets added
+      select(-c("# [1]CHROM")) #remove the null column that gets added
     colnames(vcf) = newColNames
-    sfs_indivs = colnames(vcf)[which(colnames(vcf) %in% indivs$unrelsID)]
+    sfs_indivs = colnames(vcf)[which(colnames(vcf) %in% indivs$Sample)]
     
     #Reformat and replace patterns with allele counts value
     GTCounts = vcf %>%
