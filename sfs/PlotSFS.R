@@ -168,7 +168,7 @@ FoldedSFS_N6 = ggplot(PlottingFolded_N6, aes(y=Proportional, x=bin, fill=Subspec
 
 
 allSFS = ggarrange(UnfoldedSFS_N10, UnfoldedSFS_N6, FoldedSFS_N10, FoldedSFS_N6, 
-                   labels = c("A","B","C","D"), font.label = list(size = 18), 
+                   #labels = c("A","B","C","D"), font.label = list(size = 18), 
                    nrow = 2, ncol = 2)
 
 allSFS_axes = annotate_figure(allSFS, 
