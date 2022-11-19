@@ -33,48 +33,23 @@ unfoldedDF = rbindlist(sapply(fnames, read.delim, simplify = FALSE), use.names =
 unfoldedDF_N6 = rbindlist(sapply(fnames_N6, read.delim, simplify = FALSE), use.names = TRUE, idcol = "Subspecies") %>%
   mutate(Subspecies = gsub("_.*$","",Subspecies))
 
-#Reformatting
-PlottingFolded = unfoldedDF %>%
-  group_by(Subspecies, FreqBin) %>%
-  summarise(WholeGenomeCounts = sum(sum)) %>%
-  ungroup() %>%
-  group_by(Subspecies) %>%
-  group_modify(~ fold(.x$WholeGenomeCounts, n = 20)) %>% #this n = num chroms
-  ungroup() %>%
-  mutate(bin = rep(seq(1:10), length.out = n()),
-         Subspecies = factor(Subspecies, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'Sumatran')))
-
-PlottingUnfolded = unfoldedDF %>%
-  filter(FreqBin > 0 & FreqBin < 20) %>% #remove fixed stuff
-  group_by(Subspecies, FreqBin) %>%
-  summarise(WholeGenomeCounts = sum(sum)) %>%
-  ungroup() %>%
-  mutate(Subspecies = factor(Subspecies, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'Sumatran')))
-
-TotalCounts = PlottingUnfolded %>%
-  group_by(Subspecies) %>%
-  summarise(TotalSites = sum(WholeGenomeCounts))
-
-PlottingUnfolded$Proportional = PlottingUnfolded$WholeGenomeCounts/(TotalCounts$TotalSites[match(PlottingUnfolded$Subspecies, TotalCounts$Subspecies)])
-
-PlottingFolded$Proportional = PlottingFolded$data_fold/(TotalCounts$TotalSites[match(PlottingFolded$Subspecies, TotalCounts$Subspecies)])
-
 ###N6
-Indochinese = unfoldedDF_N6 %>%
-  filter(Subspecies == "Indochinese") 
-
-Indochinese_addBins = unfoldedDF_N6 %>%
-  filter(Subspecies == "Amur") %>%
-  mutate(sum = 0,
-         Subspecies = "Indochinese") %>%
-  left_join(Indochinese, by = c("Subspecies", "FreqBin","chromosome")) %>%
-  mutate(sum = ifelse(is.na(sum.y), sum.x, sum.y)) %>%
-  select("Subspecies", "FreqBin", "sum", "chromosome")
+#run when group is missing bins
+# Indochinese = unfoldedDF_N6 %>%
+#   filter(Subspecies == "Indochinese") 
+# 
+# Indochinese_addBins = unfoldedDF_N6 %>%
+#   filter(Subspecies == "Amur") %>%
+#   mutate(sum = 0,
+#          Subspecies = "Indochinese") %>%
+#   left_join(Indochinese, by = c("Subspecies", "FreqBin","chromosome")) %>%
+#   mutate(sum = ifelse(is.na(sum.y), sum.x, sum.y)) %>%
+#   select("Subspecies", "FreqBin", "sum", "chromosome")
   
 
 PlottingFolded_N6 = unfoldedDF_N6 %>%
-  filter(Subspecies != "Indochinese") %>%
-  rbind.data.frame(Indochinese_addBins) %>%
+  #filter(Subspecies != "Indochinese") %>%
+  #rbind.data.frame(Indochinese_addBins) %>%
   group_by(Subspecies, FreqBin) %>% 
   summarise(WholeGenomeCounts = sum(sum)) %>%
   ungroup() %>%
@@ -85,8 +60,8 @@ PlottingFolded_N6 = unfoldedDF_N6 %>%
          Subspecies = factor(Subspecies, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'Sumatran')))
 
 PlottingUnfolded_N6 = unfoldedDF_N6 %>%
-  filter(Subspecies != "Indochinese") %>%
-  rbind.data.frame(Indochinese_addBins) %>%
+  #filter(Subspecies != "Indochinese") %>%
+  #rbind.data.frame(Indochinese_addBins) %>%
   filter(FreqBin > 0 & FreqBin < 12) %>% #remove fixed stuff
   group_by(Subspecies, FreqBin) %>%
   summarise(WholeGenomeCounts = sum(sum)) %>%
