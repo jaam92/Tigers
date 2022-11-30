@@ -6,31 +6,32 @@ library(ggpubr)
 #Load ibdseq roh outputs and meta data
 setwd("~/Documents/Tigers/IBD")
 
-popsDF = read_csv("~/Documents/Tigers/IndivFiles/individual_ids.csv") %>%
-  mutate(combo = ifelse(Subspecies2 == "Generic", paste(Subspecies2, "-", Phenotype, sep = ""), Subspecies))
-unrelateds = read_delim("~/Documents/Tigers/IndivFiles/N10-N6-N3_unrelateds.txt", delim = "\t")
+popsDF = read_delim("~/Documents/Tigers/IndivFiles/TableX-SampleDetails.txt") 
+unrelateds = read_delim("~/Documents/Tigers/IndivFiles/N10-N6_unrelateds.txt", delim = "\t")
 
-###Only needed to run this to generate the files initially
-df = read_delim("~/Documents/Tigers/IBD/allChroms_truffle_allSubSpecies_calledPerSpecies.segments.coverage.bed", delim = "\t", col_names = c("chrom","start","end", "sample1","sample2", "typeIBD", "IBDLengthMb", "PropCovered"), col_types = "cnncccnn") %>%
-  group_by(chrom,start,end,sample1,sample2,IBDLengthMb,typeIBD) %>%
-  summarise_at(c("PropCovered"), sum, na.rm = TRUE) %>%
-  ungroup() 
+# ###Only needed to run this to generate the files initially
+# df = read_delim("~/Documents/Tigers/IBD/allChroms_truffle_allSubSpecies_calledPerSpecies.segments.coverage.bed", delim = "\t", col_names = c("chrom","start","end", "sample1","sample2", "typeIBD", "IBDLengthMb", "PropCovered"), col_types = "cnncccnn") %>%
+#   group_by(chrom,start,end,sample1,sample2,IBDLengthMb,typeIBD) %>%
+#   summarise_at(c("PropCovered"), sum, na.rm = TRUE) %>%
+#   ungroup() 
+# 
+# ##Identify IBD greater than or equal to 2Mb and remove IBD where the avg. prop covered by SNPs is within 1 SD of the mean
+# IBDgr2Mb = df[which(df$IBDLengthMb >= 2),][c("chrom","start","end", "sample1","sample2", "typeIBD", "IBDLengthMb", "PropCovered")]
+# z = data.table(IBDgr2Mb)
+# z[,ToKeep := abs(IBDgr2Mb$PropCovered - mean(IBDgr2Mb$PropCovered)) < sd(IBDgr2Mb$PropCovered)][ToKeep  == TRUE] #ID IBD to keep
 
-##Identify IBD greater than or equal to 2Mb and remove IBD where the avg. prop covered by SNPs is within 1 SD of the mean
-IBDgr2Mb = df[which(df$IBDLengthMb >= 2),][c("chrom","start","end", "sample1","sample2", "typeIBD", "IBDLengthMb", "PropCovered")]
-z = data.table(IBDgr2Mb)
-z[,ToKeep := abs(IBDgr2Mb$PropCovered - mean(IBDgr2Mb$PropCovered)) < sd(IBDgr2Mb$PropCovered)][ToKeep  == TRUE] #ID IBD to keep
+#write.table(z, "~/Documents/Tigers/IBD/allIBD_propCoveredwithin1SDMean_gr2Mb_allChroms_highCov_runSpeciesSep_truffle.txt", quote = F, row.names = F, col.names = T, sep = "\t")
 
-#write.table(z, "~/Documents/Tigers/IBD/TrueIBD_propCoveredwithin1SDMean_gr2Mb_allChroms_highCov_runSpeciesSep_truffle.txt", quote = F, row.names = F, col.names = T, sep = "\t")
+#write.table(z %>% filter(ToKeep == "TRUE"), "~/Documents/Tigers/IBD/TrueIBD_propCoveredwithin1SDMean_gr2Mb_allChroms_highCov_runSpeciesSep_truffle.txt", quote = F, row.names = F, col.names = T, sep = "\t")
 
 #IBD segments to keep (only include unrelateds)
-z = read_delim("~/Documents/Tigers/IBD/TrueIBD_propCoveredwithin1SDMean_gr2Mb_allChroms_highCov_runSpeciesSep_truffle.txt", delim = "\t") 
+z = read_delim("~/Documents/Tigers/IBD/allIBD_propCoveredwithin1SDMean_gr2Mb_allChroms_highCov_runSpeciesSep_truffle.txt", delim = "\t") 
 
 dfIBD = z %>%
-  filter(ToKeep == "TRUE" & sample1 %in% unrelateds$unrelsID & sample2 %in% unrelateds$unrelsID) %>%
+  filter(ToKeep == "TRUE" & sample1 %in% unrelateds$Sample & sample2 %in% unrelateds$Sample) %>%
   mutate(ToKeep = NULL,
-         pop1 = popsDF$Subspecies2[match(sample1, popsDF$Individual)],
-         pop2 = popsDF$Subspecies2[match(sample2, popsDF$Individual)]) 
+         pop1 = popsDF$Subspecies_GroupID_Corrected[match(sample1, popsDF$Sample)],
+         pop2 = popsDF$Subspecies_GroupID_Corrected[match(sample2, popsDF$Sample)]) 
 
 groupScoreDF = dfIBD %>%
   filter(pop1 == pop2 & IBDLengthMb > 2 & IBDLengthMb <= 20) %>%
@@ -38,18 +39,19 @@ groupScoreDF = dfIBD %>%
   summarise(GroupScore = sum(as.numeric(IBDLengthMb))) %>% #sum up shared IBD for group
   ungroup() 
 
+
 #count individuals per pop and get norm. constant
 indivs = unique(c(unique(dfIBD$sample1), unique(dfIBD$sample2)))
 
 IBDScoreDF = popsDF %>%
-  filter(Individual %in% indivs) %>%
-  group_by(Subspecies2) %>%
+  filter(Sample %in% indivs) %>%
+  group_by(Subspecies_GroupID_Corrected) %>%
   count() %>%
   filter(n > 1) %>%
   mutate(normConstant = (choose(2*as.numeric(n), 2)) - as.numeric(n),
-         GroupScore = groupScoreDF$GroupScore[match(Subspecies2, groupScoreDF$pop1)],
+         GroupScore = groupScoreDF$GroupScore[match(Subspecies_GroupID_Corrected, groupScoreDF$pop1)],
          NormGroupScorePerMb = (GroupScore/normConstant),
-         Subspecies2 = factor(Subspecies2, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran'))) %>%
+         Subspecies2 = factor(Subspecies_GroupID_Corrected, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran'))) %>%
   na.omit() #drop groups without ibd after filtering cut-offs
 
 IBDScoreDF$RelToGeneric = IBDScoreDF$NormGroupScorePerMb/IBDScoreDF[grep("Generic$", IBDScoreDF$Subspecies2),]$NormGroupScorePerMb
