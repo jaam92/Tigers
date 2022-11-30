@@ -33,11 +33,12 @@ plotFxn = function(dataFrame, x_axisCol, y_axisCol, y_axisTitle) {
 }
 
 #Read file in 
+removed = c('T18', 'T5', 'T10', 'SRR5591010', 'SRR5612311', 'SRR5612312')
 PlotDF = read_delim("~/Documents/Tigers/AnnotSites/GTAnnotationCountResults_Jan2022_Tigers.txt", delim = "\t") %>%
   mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>%
   mutate(CallableSites = LineCount - Missing,
          Subspecies2 = factor(Subspecies2, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran'))) %>%
-  filter(!ID %in% indivsToRemove & Missing < 2500) 
+  filter(!ID %in% removed & Missing < 2500) 
   
 
 
@@ -54,38 +55,38 @@ ScaledPlotDF = PropPlotDF %>%
 write.table(ScaledPlotDF, file = "~/Documents/Tigers/AnnotSites/scaledGTAnnotationCountResults_Jan2022_Tigers.txt", col.names = TRUE, row.names = FALSE, quote = FALSE, sep = "\t")
 
 ###Plot Supplementary Figures putative neutral and deleterious
-CountDerHom_PutNeu = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies2 ,y_axisCol = PlotDF$PutNeuSIFT_CountDerHom, y_axisTitle = "Count derived neutral homozygotes")
-CountDerHom_PutDel = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies2 ,y_axisCol = PlotDF$PutDelSIFT_CountDerHom, y_axisTitle = "Count derived deleterious homozygotes")
+CountDerHom_SY = plotFxn(dataFrame = ScaledPlotDF, x_axisCol = ScaledPlotDF$Subspecies2 ,y_axisCol = ScaledPlotDF$SY_CountDerHom, y_axisTitle = "Count derived neutral homozygotes")
+CountDerHom_NS = plotFxn(dataFrame = ScaledPlotDF, x_axisCol = ScaledPlotDF$Subspecies2 ,y_axisCol = ScaledPlotDF$NS_CountDerHom, y_axisTitle = "Count derived deleterious homozygotes")
 
-CountVar_PutNeu = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies2 ,y_axisCol = PlotDF$PutNeuSIFT_CountVariants, y_axisTitle = "Count derived neutral variants")
-CountVar_PutDel = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies2 ,y_axisCol = PlotDF$PutDelSIFT_CountVariants, y_axisTitle = "Count derived deleterious variants")
+CountVar_SY = plotFxn(dataFrame = ScaledPlotDF, x_axisCol = ScaledPlotDF$Subspecies2 ,y_axisCol = ScaledPlotDF$SY_CountVariants, y_axisTitle = "Count derived neutral variants")
+CountVar_NS = plotFxn(dataFrame = ScaledPlotDF, x_axisCol = ScaledPlotDF$Subspecies2 ,y_axisCol = ScaledPlotDF$NS_CountVariants, y_axisTitle = "Count derived deleterious variants")
 
-CountAllele_PutNeu = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies2 ,y_axisCol = PlotDF$PutNeuSIFT_CountAlleles, y_axisTitle = "Count derived neutral alleles")
-CountAllele_PutDel = plotFxn(dataFrame = PlotDF, x_axisCol = PlotDF$Subspecies2 ,y_axisCol = PlotDF$PutDelSIFT_CountAlleles, y_axisTitle = "Count derived deleterious alleles")
+CountAllele_SY = plotFxn(dataFrame = ScaledPlotDF, x_axisCol = ScaledPlotDF$Subspecies2 ,y_axisCol = ScaledPlotDF$SY_CountAlleles, y_axisTitle = "Count derived neutral alleles")
+CountAllele_NS = plotFxn(dataFrame = ScaledPlotDF, x_axisCol = ScaledPlotDF$Subspecies2 ,y_axisCol = ScaledPlotDF$NS_CountAlleles, y_axisTitle = "Count derived deleterious alleles")
 
 
 #Neutral
-putNeu = ggarrange( CountDerHom_PutNeu + theme(axis.title.y=element_blank(), axis.title.x=element_blank()) + ggtitle("Count Homozygotes"),
-                    CountVar_PutNeu + theme(axis.title.y=element_blank(), axis.title.x=element_blank()) + ggtitle("Count Variants"),
-                    CountAllele_PutNeu + theme(axis.title.y=element_blank(), axis.title.x=element_blank()) + ggtitle("Count Alleles"),
+SY = ggarrange( CountDerHom_SY + theme(axis.title.y=element_blank(), axis.title.x=element_blank()) + ggtitle("Count Homozygotes"),
+                    CountVar_SY + theme(axis.title.y=element_blank(), axis.title.x=element_blank()) + ggtitle("Count Variants"),
+                    CountAllele_SY + theme(axis.title.y=element_blank(), axis.title.x=element_blank()) + ggtitle("Count Alleles"),
                     align = 'hv',
                     #labels = c("A", "B", "C"),
                     hjust = -1,
                     nrow = 1)
-putNeuAnnot = annotate_figure(putNeu, left = text_grob("Neutral", size=16, rot = 90, hjust = 0.5))
+SYAnnot = annotate_figure(SY, left = text_grob("Synonymous", size=16, rot = 90, hjust = 0.5))
 
 #Deleterious
-putDel = ggarrange( CountDerHom_PutDel + theme(axis.title.y=element_blank(), axis.title.x=element_blank()),
-                    CountVar_PutDel + theme(axis.title.y=element_blank(), axis.title.x=element_blank()),
-                    CountAllele_PutDel + theme(axis.title.y=element_blank(), axis.title.x=element_blank()),
+NS = ggarrange( CountDerHom_NS + theme(axis.title.y=element_blank(), axis.title.x=element_blank()),
+                    CountVar_NS + theme(axis.title.y=element_blank(), axis.title.x=element_blank()),
+                    CountAllele_NS + theme(axis.title.y=element_blank(), axis.title.x=element_blank()),
                     align = 'hv',
                     #labels = c("D", "E", "F"),
                     hjust = -1,
                     nrow = 1)
-putDelAnnot = annotate_figure(putDel, left = text_grob("Deleterious", size=16, rot = 90, hjust = 0.5))
+NSAnnot = annotate_figure(NS, left = text_grob("Nonsynonymous", size=16, rot = 90, hjust = 0.5))
 
 #plot deleterious and neutral
-ggarrange(putNeuAnnot, putDelAnnot, nrow = 2)
+ggarrange(SYAnnot, NSAnnot, nrow = 2)
 
 #arrange the three scaled derived allele count plots in a single row
 scaledCountDerHom_PutNeu = plotFxn(dataFrame = ScaledPlotDF, x_axisCol = ScaledPlotDF$Subspecies2 ,y_axisCol = ScaledPlotDF$PutNeuSIFT_CountDerHom, y_axisTitle = "Count derived neutral homozygotes")
