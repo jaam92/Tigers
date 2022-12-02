@@ -5,20 +5,19 @@ library(ggpubr)
 setwd("~/Documents/Tigers/ROH/")
 
 #Load roh and FSNP and meta data
-popsDF = read_csv("~/Documents/Tigers/IndivFiles/individual_ids.csv")
+popsDF = read_delim("~/Documents/Tigers/IndivFiles/TableX-SampleDetails.txt")
 
 roh = read_delim("~/Documents/Tigers/ROH/TrueROH_propCoveredwithin1SDMean_gr100kb_allChroms_highCov_runSpeciesSep_garlic.txt", delim = "\t") %>%
-  left_join(popsDF, by = c("INDV" = "Individual")) %>%
-  mutate(Subspecies = NULL,
-         Subspecies2 = factor(Subspecies2, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran')),
+  left_join(popsDF, by = c("INDV" = "Sample")) %>%
+  mutate(Subspecies2 = factor(Subspecies_GroupID_Corrected, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran')),
          TYPE2 = paste("Type",TYPE))
 
 rohLengthsClass = roh %>%
   group_by(INDV, TYPE) %>%
   summarise_at(c("AUTO_LEN"), sum) %>%
   ungroup() %>%
-  left_join(popsDF,by = c("INDV" = "Individual")) %>%
-  mutate(Subspecies2 = factor(Subspecies2, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran')),
+  left_join(popsDF,by = c("INDV" = "Sample")) %>%
+  mutate(Subspecies2 = factor(Subspecies_GroupID_Corrected, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran')),
          TYPE2 = paste("Type",TYPE))
 
 FROH = rohLengthsClass %>%
@@ -74,13 +73,17 @@ plotFROH = ggplot(FROH, aes(x=Subspecies2, y=Froh)) +
 print(plotFROH)
 
 ###plot inbreeding measures
+source(file = "~/Documents/Tigers/FSNP_Het/heterozygosity_plotting.R")
 y = all_nodups_full_highCov %>%
-  select(Individual, FSNP, Subspecies2)
+  select(Sample, FSNP, Subspecies) %>%
+  mutate(Type = "F[SNP]")
 x = FROH %>%
-  select(INDV, Froh, Subspecies2) 
+  select(INDV, Froh, Subspecies2) %>%
+  mutate(Type = "F[ROH]")
 colnames(x) = c("INDV", "Value","Subspecies2" ,"TYPE")
 colnames(y) = c("INDV", "Value","Subspecies2" ,"TYPE")
-z = rbind.data.frame(x, y)
+z = rbind.data.frame(x, y) %>%
+  mutate(Value = ifelse(Value < 0, 0, Value))
 z$facets = factor(z$TYPE, 
                   labels = c("F[ROH]", "F[SNP]"))
 inbreeding = ggplot(z, aes(x=Subspecies2, y=Value, fill=Subspecies2)) + 
@@ -105,4 +108,4 @@ plot = ggarrange(plotROHs + xlab(NULL),
                  legend = "none")
 
 annotate_figure(plot, 
-                left = text_grob("Subspecies", color = "black", face = "bold", size = 18, rot = 90))
+                left = text_grob("Subspecies", color = "black", size = 18, rot = 90))
