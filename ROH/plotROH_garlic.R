@@ -109,3 +109,25 @@ plot = ggarrange(plotROHs + xlab(NULL),
 
 annotate_figure(plot, 
                 left = text_grob("Subspecies", color = "black", size = 18, rot = 90))
+
+
+####Plot FSNP versus FROH linear regression
+colnames(x) = c("INDV", "FROH","Subspecies2" ,"TYPE")
+colnames(y) = c("INDV", "FSNP","Subspecies2" ,"TYPE")
+x %>% 
+  left_join(y, by = c("INDV")) %>%
+  na.omit() %>%
+  #mutate(FSNP = ifelse(FSNP < 0, 0, FSNP)) %>%
+  ggplot(aes(x=FSNP, y=FROH, colour=Subspecies2.x)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  stat_cor(aes(label = paste(..rr.label.., ..p.label.., sep = "~")), color = "red", geom = "label") + #this is not the adjusted r2
+  facet_wrap(~Subspecies2.x) + 
+  labs(x=expression(F[SNP]), y=expression(F[ROH])) +
+  scale_colour_manual(name = "Subspecies", values = cbPalette) +
+  theme_bw() + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust = 1, size = 16), 
+        axis.text.y = element_text(size = 16), 
+        plot.title = element_text(size = 18, face = "bold", hjust = 0.5), 
+        axis.title = element_text(size = 16),
+        strip.text = element_text(size = 14))
