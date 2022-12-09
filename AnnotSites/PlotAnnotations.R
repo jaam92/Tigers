@@ -1,5 +1,4 @@
 #Load Libraries
-source("~/Documents/DogProject_Jaz/LocalRscripts/OMIA/R_rainclouds.R")
 library(tidyverse)
 library(ggpubr)
 
@@ -7,20 +6,12 @@ library(ggpubr)
 cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25")#palette
 
 plotFxn = function(dataFrame, x_axisCol, y_axisCol, y_axisTitle) {
-  RaincloudWithBoxPlot = ggplot(dataFrame, aes(x=x_axisCol, y=y_axisCol, colour=x_axisCol)) +
-    geom_flat_violin(size=1, position = position_nudge(x = .25, y = 0),adjust =2, trim = FALSE) +
-    geom_point(aes(x = x_axisCol, y = y_axisCol, colour = x_axisCol), 
-               position = position_jitter(width = .05),
-               size = 1, 
-               shape = 20) +
-    geom_boxplot(aes(x = x_axisCol, y = y_axisCol, fill = x_axisCol),
-                 outlier.shape = NA, 
-                 alpha = .5, 
-                 width = .1, 
-                 colour = "black") +
+  RaincloudWithBoxPlot = ggplot(dataFrame, aes(x_axisCol, y_axisCol, fill=Subspecies)) + 
+    ggdist::stat_halfeye(adjust = .5, width = .7, .width = 0, justification = -.2, point_colour = NA) + 
+    geom_boxplot(width = .2, outlier.shape = NA) + 
+    geom_jitter(width = .05, alpha = .5) +
     coord_flip() +
     guides(fill = "none", colour = "none") +
-    scale_colour_manual(values = cbPalette) +
     scale_fill_manual(values = cbPalette) + 
     labs(x="Subspecies",y=paste0(y_axisTitle)) + 
     theme_bw() + 
@@ -34,7 +25,7 @@ plotFxn = function(dataFrame, x_axisCol, y_axisCol, y_axisTitle) {
 
 #Read file in 
 removed = c('T18', 'T5', 'T10', 'SRR5591010', 'SRR5612311', 'SRR5612312')
-#removed_plusoutlier = c('T18', 'T5', 'T10', 'SRR5591010', 'SRR5612311', 'SRR5612312', 'BEN_NE2', 'GEN1') #last two individuals are outliers on the plot
+removed_plusoutlier = c('T18', 'T5', 'T10', 'SRR5591010', 'SRR5612311', 'SRR5612312', 'BEN_NE2', 'GEN1') #last two individuals are outliers on the plot
 PlotDF = read_delim("~/Documents/Tigers/AnnotSites/GTAnnotationCountResults_Nov2022_Tigers.txt", delim = "\t") %>%
   mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>%
   mutate(CallableSites = LineCount - Missing,
@@ -53,7 +44,7 @@ ScaledPlotDF = PropPlotDF %>%
   mutate_at(vars(LOF_CountAlleles:SY_CountVariants), list(~.*scaleCalls)) %>%
   mutate_if(is.numeric, ceiling)
 
-write.table(ScaledPlotDF, file = "~/Documents/Tigers/AnnotSites/scaledGTAnnotationCountResults_Nov2022_Tigers.txt", col.names = TRUE, row.names = FALSE, quote = FALSE, sep = "\t")
+#write.table(ScaledPlotDF, file = "~/Documents/Tigers/AnnotSites/scaledGTAnnotationCountResults_Nov2022_Tigers.txt", col.names = TRUE, row.names = FALSE, quote = FALSE, sep = "\t")
 
 ###Plot Supplementary Figures putative neutral and deleterious
 CountDerHom_SY = plotFxn(dataFrame = ScaledPlotDF, x_axisCol = ScaledPlotDF$Subspecies ,y_axisCol = ScaledPlotDF$SY_CountDerHom, y_axisTitle = "Count derived neutral homozygotes")
@@ -131,13 +122,12 @@ pairwise.wilcox.test(ScaledPlotDF$PutDelSIFT_CountAlleles, ScaledPlotDF$Subspeci
 
 
 ####combine with FSNP and FROH
-source(file = "~/Documents/Tigers/FSNP_Het/heterozygosity_plotting.R")
 source(file = "~/Documents/Tigers/ROH/plotROH_garlic.R")
 
 mergedPlotDF = ScaledPlotDF %>%
-  mutate(FROH = FROH$Froh[match(ID, FROH$INDV)],
-         FSNP = all_nodups_full_highCov$FSNP[match(ID, all_nodups_full_highCov$Individual)],
-         Heterozygosity = all_nodups_full_highCov$Heterozygosity[match(ID, all_nodups_full_highCov$Individual)]) %>%
+  mutate(FROH = x$FROH[match(ID, x$INDV)],
+         FSNP = all_nodups_full_highCov$FSNP[match(ID, all_nodups_full_highCov$Sample)],
+         Heterozygosity = all_nodups_full_highCov$Heterozygosity[match(ID, all_nodups_full_highCov$Sample)]) %>%
   na.omit(FSNP) %>%
   na.omit(FROH) %>%
   na.omit(Heterozygosity)
@@ -147,7 +137,7 @@ putDelAllele_FROH = ggplot(mergedPlotDF, aes(x=FROH, y=PutDelSIFT_CountAlleles))
   geom_point(aes(colour = Subspecies), size = 2) +
   geom_smooth(method = "lm") +
   stat_cor(aes(label = paste(..rr.label.., ..p.label.., sep = "~")), color = "red", geom = "label") + #this is not the adjusted r2
-  facet_grid(.~Subspecies) +
+  facet_wrap(.~Subspecies) +
   scale_colour_manual(name = "Subspecies", values = cbPalette) +
   labs(x=expression(F[ROH]), y="Count derived deleterious alleles") +
   theme_bw() + 
@@ -161,7 +151,7 @@ putDelDerHom_FROH = ggplot(mergedPlotDF, aes(x=FROH, y=PutDelSIFT_CountAlleles))
   geom_point(aes(colour = Subspecies), size = 2) +
   geom_smooth(method = "lm") +
   stat_cor(aes(label = paste(..rr.label.., ..p.label.., sep = "~")), color = "red", geom = "label") + #this is not the adjusted r2
-  facet_grid(.~Subspecies) +
+  facet_wrap(.~Subspecies) +
   scale_colour_manual(name = "Subspecies", values = cbPalette) +
   labs(x=expression(F[ROH]), y="Count derived deleterious homozygotes") +
   theme_bw() + 
@@ -175,7 +165,7 @@ putDelDerHom_FSNP = ggplot(mergedPlotDF, aes(x=FSNP, y=PutDelSIFT_CountAlleles))
   geom_point(aes(colour = Subspecies), size = 2) +
   geom_smooth(method = "lm") +
   stat_cor(aes(label = paste(..rr.label.., ..p.label.., sep = "~")), color = "red", geom = "label") + #this is not the adjusted r2
-  facet_grid(.~Subspecies) +
+  facet_wrap(.~Subspecies) +
   scale_colour_manual(name = "Subspecies", values = cbPalette) +
   labs(x=expression(F[SNP]), y="Count derived deleterious homozygotes") +
   theme_bw() + 
@@ -189,7 +179,7 @@ putDelAllele_FSNP = ggplot(mergedPlotDF, aes(x=FSNP, y=PutDelSIFT_CountAlleles))
   geom_point(aes(colour = Subspecies), size = 2) +
   geom_smooth(method = "lm") +
   stat_cor(aes(label = paste(..rr.label.., ..p.label.., sep = "~")), color = "red", geom = "label") + #this is not the adjusted r2
-  facet_grid(.~Subspecies) +
+  facet_wrap(.~Subspecies) +
   scale_colour_manual(name = "Subspecies", values = cbPalette) +
   labs(x=expression(F[SNP]), y="Count derived deleterious alleles") +
   theme_bw() + 
@@ -202,16 +192,4 @@ putDelAllele_FSNP = ggplot(mergedPlotDF, aes(x=FSNP, y=PutDelSIFT_CountAlleles))
 ggarrange(putDelAllele_FROH, putDelDerHom_FROH, common.legend = TRUE)
 ggarrange(putDelAllele_FSNP, putDelDerHom_FSNP, common.legend = TRUE)
 
-ggplot(mergedPlotDF, aes(x=FSNP, y=FROH)) +
-  geom_point(aes(colour = Subspecies), size = 2) +
-  geom_smooth(method = "lm") +
-  stat_cor(aes(label = paste(..rr.label.., ..p.label.., sep = "~")), color = "red", geom = "label") + #this is not the adjusted r2
-  facet_grid(.~Subspecies) +
-  scale_colour_manual(name = "Subspecies", values = cbPalette) +
-  labs(x=expression(F[ROH]), y=expression(F[SNP])) +
-  theme_bw() + 
-  theme(axis.text.x = element_text(hjust = 0.5, vjust = 1, size = 16), 
-        axis.text.y = element_text(size = 16), 
-        plot.title = element_text(size = 18, face = "bold", hjust = 0.5), 
-        axis.title = element_text(size = 16),
-        strip.text = element_text(size = 14))
+
