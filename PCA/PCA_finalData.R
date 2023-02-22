@@ -5,26 +5,25 @@ library(GWASTools)
 library(SNPRelate)
 
 #Set working directory and load files
-setwd("~/Documents/TigerProject/PCA")
+setwd("~/Documents/Tigers/PCA/plinkFiles/")
 set.seed(10192021)
-#snpgdsBED2GDS(bed.fn = "high-corr-nodups-biallelic-AN-MM-pcc.bed", bim.fn = "high-corr-nodups-biallelic-AN-MM-pcc.bim", fam.fn = "high-corr-nodups-biallelic-AN-MM-pcc.fam", out.gdsfn = "high-corr-nodups-biallelic-AN-MM-pcc.gds", cvt.chr = "char")
+snpgdsBED2GDS(bed.fn = "highcov.nodups.highcov.biallelic.AN.pCC.DPQUALtest.genmap.bed", bim.fn = "highcov.nodups.highcov.biallelic.AN.pCC.DPQUALtest.genmap.bim", fam.fn = "highcov.nodups.highcov.biallelic.AN.pCC.DPQUALtest.genmap.fam", out.gdsfn = "highcov.nodups.highcov.biallelic.AN.pCC.DPQUALtest.genmap.gds", cvt.chr = "char")
 
 #Open files and prep
-popsDF = popsDF = read_csv("~/Documents/Tigers/IndivFiles/individual_ids.csv") %>%
-  mutate(combo = ifelse(Subspecies2 == "Generic", paste(Subspecies2, "-", Phenotype, sep = ""), Subspecies2)) #metadata
+popsDF = read_delim("~/Documents/Tigers/IndivFiles/TableX-SampleDetails.txt") 
 
-gds = snpgdsOpen("high-corr-nodups-biallelic-AN-MM-pcc.gds") #open genofile
+gds = snpgdsOpen("highcov.nodups.highcov.biallelic.AN.pCC.DPQUALtest.genmap.gds") #open genofile
 sampIds = read.gdsn(index.gdsn(gds, "sample.id")) #grab sample ids 
 famIds = as.data.frame(sampIds) %>%
-  left_join(popsDF, by = c("sampIds"="Individual")) %>%
-  pull(Subspecies2)#make family ids
+  left_join(popsDF, by = c("sampIds"="Sample")) %>%
+  pull(Subspecies_GroupID_Corrected)#make family ids
 
 #LD prune because data set is small, set r2 = 0.7, maf 5%, and 50 snp window 
 snpset = snpgdsLDpruning(gds, sample.id=sampIds, method="corr", slide.max.n=50, ld.threshold=0.3, maf = 0.05, autosome.only = F) 
 pruned = unlist(snpset, use.names=FALSE)
 
 #Run KING
-KING = snpgdsIBDKING(gds, sample.id = sampIds, snp.id=pruned, autosome.only = F)
+KING = snpgdsIBDMLE(gds, sample.id = sampIds, snp.id=pruned, autosome.only = F)
 
 #Make GRM
 KINGmat = KING$kinship %>%
@@ -34,26 +33,46 @@ rownames(KINGmat) = KING$sample.id
 snpgdsClose(gds)
 
 #Reopen GDS data 
-genoFile = GdsGenotypeReader(filename = "high-corr-nodups-biallelic-AN-MM-pcc.gds")#read in GDS data
+genoFile = GdsGenotypeReader(filename = "highcov.nodups.highcov.biallelic.AN.pCC.DPQUALtest.genmap.updatedFID.gds")#read in GDS data
 genoData = GenotypeData(genoFile)#create a GenotypeData class object
 
 ##Partition data into relateds and unrelated (less than first cousins)
 sampset = pcairPartition(kinobj = KINGmat, kin.thresh=2^(-9/2), divobj = KINGmat, div.thresh=2^(-9/2)) 
 unrelsID = sampset$unrels
 
+#Output unrelateds
+# x = cbind.data.frame(unrelsID) %>%
+#   mutate(popsDF$Subspecies_GroupID_Corrected[match(unrelsID, popsDF$Sample)],
+#          popsDF$`Depth (post filtering)`[match(unrelsID, popsDF$Sample)]) 
+# names(x) = c("Sample", "Population", "Depth")
+# 
+# n10 = x %>% 
+#   filter(Depth >= 5) %>% 
+#   group_by(Population) %>% 
+#   top_n(10)
+# 
+# n6 = n10 %>% 
+#   group_by(Population) %>% 
+#   top_n(6)
+# 
+# x$N10 = ifelse(x$Sample%in%n10$Sample, 1, 0)
+# x$N6 = ifelse(x$Sample%in%n6$Sample, 1, 0)
+# 
+# write.table(x, file = "~/Documents/Tigers/IndivFiles/N10-N6_unrelateds.txt", sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
+
 #####Look at relatedness in full data and unrelated
 # fullDataKinship = reshape2::melt(KINGmat) %>%
 #   filter(Var1%in%unrelsID & Var2%in%unrelsID) %>%
-#   mutate(pop1 = popsDF$Subspecies2[match(Var1, popsDF$Individual)],
-#          pop2 = popsDF$Subspecies2[match(Var2, popsDF$Individual)]) %>%
-#   filter(pop1 == pop2 & Var1 != Var2)  
+#   mutate(pop1 = popsDF$Subspecies_GroupID_Corrected[match(Var1, popsDF$Sample)],
+#          pop2 = popsDF$Subspecies_GroupID_Corrected[match(Var2, popsDF$Sample)]) %>%
+#   filter(pop1 == pop2 & Var1 != Var2)
 # 
 # unrelateds = reshape2::melt(KINGmat) %>%
 #   filter(Var1%in%unrelsID & Var2%in%unrelsID) %>%
-#   mutate(pop1 = popsDF$Subspecies2[match(Var1, popsDF$Individual)],
-#          pop2 = popsDF$Subspecies2[match(Var2, popsDF$Individual)]) %>%
-#   filter(pop1 == pop2 & Var1 != Var2)  
-# 
+#   mutate(pop1 = popsDF$Subspecies_GroupID_Corrected[match(Var1, popsDF$Sample)],
+#          pop2 = popsDF$Subspecies_GroupID_Corrected[match(Var2, popsDF$Sample)]) %>%
+#   filter(pop1 == pop2 & Var1 != Var2)
+ 
 
 ####Run PC-AiR
 TigerspcAir = pcair(genoData, kinobj = KINGmat, kin.thresh=2^(-9/2), divobj = KINGmat, div.thresh=2^(-9/2), unrel.set = unrelsID, snp.include = pruned, autosome.only = F)
