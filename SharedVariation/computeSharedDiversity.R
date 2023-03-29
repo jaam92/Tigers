@@ -1,6 +1,6 @@
 ####Load libraries and set working directory
 library(tidyverse)
-setwd("~/Downloads/counts_10s/ColsOfInt/")
+setwd("~/Documents/Tigers/SharedVariation/")
 
 ####Functions
 
@@ -56,11 +56,11 @@ summary_stats = segSitesOnly %>%
 cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Indochinese" = "gold4", "South China" = "plum", "Sumatran" = "cornflowerblue", "Fixed in wild"="black")#palette
 
 ggplot(summary_stats, aes(x=Subspecies2, y = mean, colour= Subspecies2)) +
-  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.2) + 
-  geom_point() + 
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=0.2, size=1) + 
+  geom_point(size=2) + 
   #coord_flip() +  
   scale_colour_manual(name = "Subspecies", values = cbPalette) +
-  labs(x = "Comparison", y="Proportion of fixed sites\nthat are segregating in captives") +
+  labs(x = "", y="Proportion of fixed sites\nthat are segregating in captives") +
   theme_bw() + 
   theme(axis.text.x = element_text( hjust= 0.5, vjust=1, size=20), 
         axis.text.y = element_text(size =20), 
