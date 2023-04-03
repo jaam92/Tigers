@@ -36,9 +36,14 @@ pivotSummarizedCounts = function(dataFrame, col_name, TypeROH){
 }
 
 #Get input files
-setwd("/scratch/users/elliea/jazlyn-ellie/oct2022-captives-usethese/AnnotatedVCF/ConcatenatedFiles")
+setwd("/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/AnnotsVEPandSIFT/annotPolarizedVCF/annot_ROHVEPSIFT/AllChroms")
+#setwd("~/Documents/Tigers/AnnotSites/AnnotatedVCF/AllChroms/")#run locally
 
-individual_ids = read_delim("/scratch/users/elliea/jazlyn-ellie/oct2022-captives-usethese/IndivFiles/individual_ids_unimputed_depthgrEqlTo5.txt", delim = "\t") #meta-data
+individual_ids = read_delim("/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/SampleLists/TableX-SampleDetails.txt", delim = "\t") %>%
+  filter(`Depth (post filtering)` >= 5 & Coverage_group == "Unimputed" )#meta-data
+
+#individual_ids = read_delim("~/Documents/Tigers/IndivFiles/TableX-SampleDetails.txt", delim = "\t") %>%
+#  filter(`Depth (post filtering)` >= 5 & Coverage_group == "Unimputed" )#meta-data run locally
 
 filenames = list.files(pattern = glob2rx("annotatedGTwithVEP_*_allChroms.txt"))
 
@@ -50,26 +55,26 @@ for (i in 1:length(filenames)){
   
   #Read files in 
   annots = read.delim(file = filenames[i])
-  indiv = unique(annots$ID)
+  indiv = str_split(filenames[i], "_")[[1]][2] #pull individual ID from between underscores
   
 
 ####Grab counts ROH for Type A
-  CountDF_TypeA = summarizeCounts(annots, withinTypeA)
+  CountDF_TypeA = summarizeCounts(annots, TypeA)
 
 ####Grab counts ROH for Type B
-  CountDF_TypeB = summarizeCounts(annots, withinTypeB)
+  CountDF_TypeB = summarizeCounts(annots, TypeB)
   
   ####Grab counts ROH for Type C
-  CountDF_TypeC = summarizeCounts(annots, withinTypeC)
+  CountDF_TypeC = summarizeCounts(annots, TypeC)
 
 ####Grab counts within and outside Type A ROH
-  ROHStats_TypeA = pivotSummarizedCounts(CountDF_TypeA, withinTypeA, "TypeA")
+  ROHStats_TypeA = pivotSummarizedCounts(CountDF_TypeA, TypeA, "TypeA")
     
 ####Grab counts within and outside Type B ROH
-  ROHStats_TypeB = pivotSummarizedCounts(CountDF_TypeB, withinTypeB, "TypeB")
+  ROHStats_TypeB = pivotSummarizedCounts(CountDF_TypeB, TypeB, "TypeB")
   
 ####Grab counts within and outside Type C ROH
-  ROHStats_TypeC = pivotSummarizedCounts(CountDF_TypeC, withinTypeC, "TypeC")
+  ROHStats_TypeC = pivotSummarizedCounts(CountDF_TypeC, TypeC, "TypeC")
 
 ###Counts of just annotations it will be the same across any df
   CountDF_withJustAnnots = CountDF_TypeA %>% 
@@ -136,7 +141,8 @@ allIndivDF = bind_rows(allIndiv) %>%
 rm(allIndiv)
 
 #Write output file
-write.table(allIndivDF, file="/scratch/users/elliea/jazlyn-ellie/oct2022-captives-usethese/AnnotatedVCF/ConcatenatedFiles/GTAnnotationCountResults_Nov2022_Tigers.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+write.table(allIndivDF, file="/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/AnnotsVEPandSIFT/annotPolarizedVCF/GTAnnotationCountResults_Nov2022_Tigers.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+#write.table(allIndivDF, file="~/Documents/Tigers/AnnotSites/GTAnnotationCountResults_Nov2022_Tigers.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE) #run locally
 
 #Calculate OR for entire population
 PerPopulationOR = allIndivDF %>%
@@ -153,7 +159,8 @@ PerPopulationOR = allIndivDF %>%
           mutate_if(is.numeric, round, digits=4) 
 
 #Write output file
-write.table(PerPopulationOR, file="/scratch/users/elliea/jazlyn-ellie/oct2022-captives-usethese/AnnotatedVCF/ConcatenatedFiles/PerPopulationOR_Nov2022_Tigers.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+write.table(PerPopulationOR, file="/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/AnnotsVEPandSIFT/annotPolarizedVCF/PerPopulationOR_Nov2022_Tigers.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+#write.table(PerPopulationOR, file="~/Documents/Tigers/AnnotSites/PerPopulationOR_Nov2022_Tigers.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE) #run locally
 
 
 
