@@ -40,10 +40,10 @@ setwd("/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/AnnotsVEPan
 #setwd("~/Documents/Tigers/AnnotSites/AnnotatedVCF/AllChroms/")#run locally
 
 individual_ids = read_delim("/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/SampleLists/TableX-SampleDetails.txt", delim = "\t") %>%
-  filter(`Depth (post filtering)` >= 5 & Coverage_group == "Unimputed" )#meta-data
+  filter(`Depth (post filtering)` >= 5 & Coverage_group == "Unimputed" & is.na(Removed))#meta-data
 
 #individual_ids = read_delim("~/Documents/Tigers/IndivFiles/TableX-SampleDetails.txt", delim = "\t") %>%
-#  filter(`Depth (post filtering)` >= 5 & Coverage_group == "Unimputed" )#meta-data run locally
+#  filter(`Depth (post filtering)` >= 5 & Coverage_group == "Unimputed" & is.na(Removed))#meta-data run locally
 
 filenames = list.files(pattern = glob2rx("annotatedGTwithVEP_*_allChroms.txt"))
 
@@ -55,7 +55,7 @@ for (i in 1:length(filenames)){
   
   #Read files in 
   annots = read.delim(file = filenames[i])
-  indiv = str_split(filenames[i], "_")[[1]][2] #pull individual ID from between underscores
+  indiv = str_match(filenames[i], "annotatedGTwithVEP_\\s*(.*?)\\s*_allChroms.txt")[,2] #pull individual ID from between underscores
   
 
 ####Grab counts ROH for Type A
