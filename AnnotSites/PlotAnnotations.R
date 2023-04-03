@@ -30,7 +30,8 @@ PlotDF = read_delim("~/Documents/Tigers/AnnotSites/GTAnnotationCountResults_Nov2
   mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>%
   mutate(CallableSites = LineCount - Missing,
          Subspecies = factor(Subspecies, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran'))) %>%
-  filter(!ID %in% removed & Missing < 2500) 
+  filter(!ID %in% removed_plusoutlier & Missing < 2500)
+  #filter(!ID %in% removed & Missing < 2500) 
   
 
 
