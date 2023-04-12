@@ -1,79 +1,68 @@
-####Load libraries and set working directory
-library(tidyverse)
-options(scipen = 999) #use this to turn off scientific notation
-setwd("~/Documents/Tigers/FSNP_Het")
+#heterozygosity
+setwd('~/Library/Mobile Documents/com~apple~CloudDocs/Documents/Documents - Ellie’s MacBook Pro (2)/Captives-2022-Final/Heterozygosity/')
+library(ggplot2)
+library(dplyr)
 
-####Load files
-heterozygosity = read_delim('~/Documents/Tigers/FSNP_Het/allSamp_Nov2022.het', delim = '\t', col_names = TRUE)
-colnames(heterozygosity) = c('Sample','O_HOM', 'E_HOM', 'N_SITES','FSNP') #rename columns
+#plot all
+heterozygosity <- read.csv('highcov.nodups.highcov.biallelic.AN.pCC.DPQUALtest.genmap.lowcov86.filter.nodups.het', header = TRUE, sep='\t')
+metadata <- read.table('~/Library/Mobile Documents/com~apple~CloudDocs/Documents/Documents - Ellie’s MacBook Pro (2)/captives-new-2021/Metadata-files/plotting_metadata.csv', header=TRUE, sep = ',',quote="")
 
-popsDF = read_delim("~/Documents/Tigers/IndivFiles/TableX-SampleDetails.txt")
+missing <- read.csv('highcov.nodups.highcov.biallelic.AN.pCC.DPQUALtest.genmap.lowcov86.filter.nodups.imiss', header = TRUE, sep='\t')
 
-####Make plotting data frame 
-all_nodups_full_highCov = heterozygosity %>%
-  left_join(popsDF) %>%
-  mutate(Heterozygosity = (N_SITES-O_HOM)/1476111759,
-         Subspecies = factor(Subspecies_GroupID, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran')),
-         BoundFSNP = ifelse(FSNP < 0, 0, FSNP)) %>%
-  arrange(Subspecies, Heterozygosity) 
+missing <- missing %>%
+  select(-c(N_DATA,N_GENOTYPES_FILTERED)) %>%
+  dplyr::rename(Individual = INDV)
+heterozygosity <- heterozygosity %>%
+  dplyr::rename(Individual = INDV) %>%
+  mutate(heterozygosity=((N_SITES-O.HOM.)/2174711735))
 
+het_metadata <- merge(heterozygosity, metadata, by="Individual")
+het_meta_missing <- merge(het_metadata, missing, by="Individual")
 
-####Plot heterozygosity all-nodups ------------------------------------------
-cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Indochinese" = "gold4", "Sumatran" = "cornflowerblue", "South China" = "plum", "Generic"="gray25")#palette
-cbPalette_expanded = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "South China" = "plum", "Generic"="gray25", "Generic-Orange" = "#CC79A7", "Generic-SnowWhite" = "#867BCF", "Generic-Golden"="darkseagreen3", "Generic-White"="cornflowerblue")#palette
+cbPalette = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#009E73", "Sumatran" = "cornflowerblue", "Indochinese" = "gold4", "Generic"="gray25", "SouthChina" = "plum")#palette
 
-#order individuals
-IDs = all_nodups_full_highCov$Sample 
-all_nodups_full_highCov$Sample = factor(all_nodups_full_highCov$Sample, levels = IDs)
-
-#lollipop plot
-LolliPlotHet = ggplot(all_nodups_full_highCov, aes(x=Sample, y=Heterozygosity, colour = Subspecies)) + 
-  geom_segment(aes(x=Sample, xend=Sample, y=0, yend=Heterozygosity), size = 1, colour = "grey")+
-  geom_point(size = 2) +
-  scale_color_manual(name="Subspecies", values=cbPalette) +
-  labs(x="Individual", y="Observed Heterozygosity") +
-  theme_bw() + 
-  theme(axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(), 
-        axis.text.y = element_text(size = 18), 
-        plot.title=element_text(size=26, face = "bold", hjust=0.5), 
-        axis.title=element_text(size=20),
-        legend.title=element_text(size=20), 
-        legend.text=element_text(size=18),
-        panel.border = element_blank(),
-        panel.grid = element_blank())
-
-#violin plots
-#jpeg(file="heterozygosity-vcftools-calledPerSubspecies-nodups-high-cov.jpeg", width = 1100, height = 550, res = 100)
-VioPlotHet = ggplot(all_nodups_full_highCov, aes(x=Subspecies, y=Heterozygosity)) +
-  geom_violin(aes(fill=Subspecies)) + 
-  geom_jitter(height = 0, width = 0.1) +
-  scale_fill_manual(name = "Subspecies", values = cbPalette) + 
-  labs(x="Subspecies",  y="Observed Heterozygosity") + 
-  theme_bw() + 
-  theme(axis.text.x = element_text(hjust = 0.5, vjust = 0.5, size = 16), 
-        axis.text.y = element_text(size = 16), 
-        plot.title = element_text(size = 18, face = "bold", hjust = 0.5), 
-        axis.title = element_text(size = 16),
-        legend.title = element_text(size=16),
-        legend.text = element_text(size=14))
-#dev.off()
+#plot with imputed identified
+ggplot(het_meta_missing, aes(x=Subspecies_GroupID_2, y=heterozygosity, fill=Subspecies_GroupID_2)) + 
+  geom_violin(position=position_dodge(1)) + 
+  scale_fill_manual(values = cbPalette, name = "") +
+  geom_point(aes(shape=Coverage_group), position=position_jitter(0.2), size = 0.6) +
+  scale_shape_manual(values=c(1, 2), name = "") +
+  ylab('Observed Heterozygosity') + 
+  xlab('') + 
+  theme_bw() +
+  theme(axis.title=element_text(size = 14), axis.text.x=element_text(size = 12)) +
+  labs(color=NULL)
 
 
-####Plot FSNP
-#jpeg(file="FSNP_vioplot.jpeg", width = 1040, height = 700, res = 100)
-plotFSNP = ggplot(all_nodups_full_highCov, aes(x=Subspecies, y=FSNP)) +
-  geom_violin(aes(fill=Subspecies)) + 
-  geom_jitter(height = 0, width = 0.1) +
-  scale_y_continuous(breaks=seq(0,1,0.1)) +
-  scale_fill_manual(name = "Subspecies", values = cbPalette) + 
-  labs(x="Subspecies", y=expression(F[SNP])) + 
-  theme_bw() + 
-  theme(axis.text.x = element_text(hjust = 0.5, vjust = 0.5, size = 16), 
-        axis.text.y = element_text(size = 16), 
-        plot.title = element_text(size = 18, face = "bold", hjust = 0.5), 
-        axis.title = element_text(size = 16),
-        legend.title = element_text(size=16),
-        legend.text = element_text(size=14)) 
+#correlate to missingness
+het_meta_missing_noimpute <- het_meta_missing %>%
+  filter(Coverage_group == 'Unimputed')
 
-#dev.off()
+ggplot(het_meta_missing_noimpute, aes(x = F_MISS, y = heterozygosity)) +
+  geom_point(color = "#00AFBB", size = 2, shape = 19) +
+  xlab('Missing') +
+  ylab('het') + 
+  theme_bw()
+  
+#heterozygosity with no samples >F_MISS 0.1
+het_meta_missing_noimpute_FMiss <- het_meta_missing_noimpute %>%
+  filter(F_MISS <= 0.20)
+
+het_meta_missing_noimpute_FMiss %>%
+  group_by(Subspecies_GroupID_2) %>%
+  summarize(min = min(heterozygosity),
+            q1 = quantile(heterozygosity, 0.25),
+            median = median(heterozygosity),
+            mean = mean(heterozygosity),
+            q3 = quantile(heterozygosity, 0.75),
+            max = max(heterozygosity))
+
+tapply(het_meta_missing_noimpute_FMiss$heterozygosity,het_meta_missing_noimpute_FMiss$Subspecies_GroupID_2,FUN = var)
+
+ggplot(het_meta_missing_noimpute_FMiss, aes(x=Subspecies_GroupID_2, y=heterozygosity, fill=Subspecies_GroupID_2)) + 
+  geom_violin(position=position_dodge(1)) + 
+  geom_jitter(shape=16, position=position_jitter(0.2)) +
+  ylab('Observed Heterozygosity') + 
+  xlab('') + 
+  theme_bw() 
+
