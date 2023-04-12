@@ -7,6 +7,7 @@ Load libraries
 ```
 library(ggpubr)
 library(tidyverse)
+library(patchwork)
 ```
 Load in data files from plink and subspecies assignments
 ```
