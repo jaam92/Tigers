@@ -62,4 +62,57 @@ figure <- ggarrange(PC1, ggarrange(PC2, PC3, ncol=2, labels = c("B" , "C")),
                     nrow = 2, labels = "A")
 
 jpeg(file="~/Documents/Documents - Ellie’s MacBook Pro (2)/captives-new-2021/pca/pca-highcov-nodups.jpeg", width = 900, height = 700, res = 100)
+
+# geography and new ancestry pca ------------------------------------------
+generic_geo_vec <- read.table('~/Library/Mobile Documents/com~apple~CloudDocs/Documents/Documents - Ellie’s MacBook Pro (2)/Captives-2022-Final/PCA/rescue_pca_highlowcov.eigenvec',head=F)
+generic_geo_val <- read.table('~/Library/Mobile Documents/com~apple~CloudDocs/Documents/Documents - Ellie’s MacBook Pro (2)/Captives-2022-Final/PCA/rescue_pca_highlowcov.eigenval',head=F)
+
+generic_geo_val$V2 <- (generic_geo_val$V1/113)*100
+
+generic_geo_vec <- generic_geo_vec %>% 
+  rename(Individual=V2)
+eigenvec_geo <- merge(generic_geo_vec, metadata,by="Individual")
+library(randomcoloR)
+n <- 23
+palette <- distinctColorPalette(n)
+
+a<- ggplot(eigenvec_geo, aes(x=V3, y=V4, color=Top_Ancestry)) +
+  scale_color_manual(name="Top Ancestry", values=Ancestry_palette) +
+  geom_point(size = 2) +
+  xlab("PC1 (3.04%)") + ylab("PC2 (2.35%)") +
+  theme_bw() +
+  theme(legend.position = c(0.2, 0.25), axis.text.x = element_text(angle = 60, hjust=1, size = 12), 
+        axis.text.y = element_text(size = 12), axis.title.x=element_text(size = 12), axis.title.y = element_text(size= 12)) 
+
+
+b <- ggplot(eigenvec_geo, aes(x=V4, y=V5, color=Top_Ancestry)) +
+  scale_color_manual(name="Rescue_Location", values=Ancestry_palette) +
+  geom_point(aes(shape=Top_Ancestry), size = 2) +
+  xlab("PC2 (2.36%)") + ylab("PC3 (2.26%)") +
+  theme(legend.position = "right", legend.title = "Top Ancestry") +
+  theme_bw() +
+  theme(legend.position = "none") 
+
+n <- 6
+palette2 <- distinctColorPalette(n)
+
+
+c<- ggplot(eigenvec_geo, aes(x=V3, y=V4, color=Region)) +
+  scale_color_brewer(palette = "Spectral", name="Region") +
+  geom_point(size = 2) +
+  xlab("PC1 (3.04%)") + ylab("PC2 (2.35%)") +
+  theme_bw() +
+  theme(legend.position = c(0.2, 0.25), axis.text.x = element_text(angle = 60, hjust=1, size = 12), 
+        axis.text.y = element_text(size = 12), axis.title.x=element_text(size = 12), axis.title.y = element_text(size= 12)) 
+
+d <- ggplot(eigenvec_geo, aes(x=V4, y=V5, color=Region)) +
+  scale_color_manual(name="Region", values=palette2) +
+  geom_point(aes(shape=Top_Ancestry), size = 2) +
+  xlab("PC2 (2.36%)") + ylab("PC3 (2.26%)") +
+  theme(legend.position = "right", legend.title = "element_blank()") +
+  theme_bw() +
+  theme(legend.position = "none") 
+a|c
+
+write.csv(eigenvec_geo, '~/Library/Mobile Documents/com~apple~CloudDocs/Documents/Documents - Ellie’s MacBook Pro (2)/Captives-2022-Final/PCA/eigenvec_geo.csv')
 ```
