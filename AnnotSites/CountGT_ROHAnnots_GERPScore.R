@@ -23,6 +23,23 @@ summarizeCounts = function(dataFrame, col_name){
   return(df)
 }
 
+summarizeCounts_SIFT = function(dataFrame, col_name){
+  colOfInterest = enquo(col_name)
+  df = dataFrame %>%
+    na.omit(SIFT) %>%
+    filter(GT != "AncHom" & GT != "Missing") %>% #Remove AncHom and Missing
+    mutate(SIFTAnnot = ifelse(ANNOT == "NS" & SIFT == "deleterious", "PutDel", "PutNeu")) %>% 
+    group_by(GT, SIFTAnnot, !!colOfInterest) %>%
+    count(name = "CountVariants") %>% #Count Variants (DERHOM =1 , HET = 1)
+    mutate(CountAlleles = ifelse(GT == "DerHom", as.numeric(CountVariants)*2, as.numeric(CountVariants)),#Count Alleles (DERHOM =2 , HET = 1)
+           CountDerHom = ifelse(GT == "DerHom", as.numeric(CountVariants), as.numeric(0))) %>% #Count DerHOM (DERHOM =1 )
+    ungroup() %>%
+    group_by(SIFTAnnot, !!colOfInterest) %>%
+    summarise_at(c("CountVariants", "CountAlleles", "CountDerHom"), sum)  %>%
+    ungroup() 
+  return(df)
+}
+
 pivotSummarizedCounts = function(dataFrame, col_name, TypeROH){
   colOfInterest = enquo(col_name)
   df = dataFrame %>% 
@@ -30,6 +47,18 @@ pivotSummarizedCounts = function(dataFrame, col_name, TypeROH){
     arrange(ANNOT) %>%
     mutate(col_name  = ifelse(!!colOfInterest == 1, "ROH", "nonROH"),
            NewColName = paste(ANNOT,Method,col_name,TypeROH, sep = "_")) %>%
+    select(NewColName,value) %>%
+    spread(NewColName,value)
+  return(df)
+}
+
+pivotSummarizedCounts_SIFT = function(dataFrame, col_name, TypeROH){
+  colOfInterest = enquo(col_name)
+  df = dataFrame %>% 
+    pivot_longer(cols = starts_with("Count"), names_to = "Method") %>%
+    arrange(SIFTAnnot) %>%
+    mutate(col_name  = ifelse(!!colOfInterest == 1, "ROH", "nonROH"),
+           NewColName = paste(SIFTAnnot,Method,col_name,TypeROH, sep = "_")) %>%
     select(NewColName,value) %>%
     spread(NewColName,value)
   return(df)
@@ -60,21 +89,27 @@ for (i in 1:length(filenames)){
 
 ####Grab counts ROH for Type A
   CountDF_TypeA = summarizeCounts(annots, TypeA)
+  CountDF_TypeA_SIFT = summarizeCounts_SIFT(annots, TypeA)
 
 ####Grab counts ROH for Type B
   CountDF_TypeB = summarizeCounts(annots, TypeB)
+  CountDF_TypeB_SIFT = summarizeCounts_SIFT(annots, TypeB)
   
-  ####Grab counts ROH for Type C
+####Grab counts ROH for Type C
   CountDF_TypeC = summarizeCounts(annots, TypeC)
-
+  CountDF_TypeC_SIFT = summarizeCounts_SIFT(annots, TypeC)
+  
 ####Grab counts within and outside Type A ROH
   ROHStats_TypeA = pivotSummarizedCounts(CountDF_TypeA, TypeA, "TypeA")
+  ROHStats_TypeA_SIFT = pivotSummarizedCounts_SIFT(CountDF_TypeA_SIFT, TypeA, "TypeA")
     
 ####Grab counts within and outside Type B ROH
   ROHStats_TypeB = pivotSummarizedCounts(CountDF_TypeB, TypeB, "TypeB")
+  ROHStats_TypeB_SIFT = pivotSummarizedCounts_SIFT(CountDF_TypeB_SIFT, TypeB, "TypeB")
   
 ####Grab counts within and outside Type C ROH
   ROHStats_TypeC = pivotSummarizedCounts(CountDF_TypeC, TypeC, "TypeC")
+  ROHStats_TypeC_SIFT = pivotSummarizedCounts_SIFT(CountDF_TypeC_SIFT, TypeC, "TypeC")
 
 ###Counts of just annotations it will be the same across any df
   CountDF_withJustAnnots = CountDF_TypeA %>% 
@@ -117,7 +152,7 @@ for (i in 1:length(filenames)){
     mutate(NewColName = paste0(ANNOT,"_",Method)) %>%
     select(NewColName,value) %>% #only keep new col and values
     spread(NewColName,value) %>% #make data one row
-    cbind.data.frame(Calls, ImpactCounts, SIFTAnnot, ROHStats_TypeA, ROHStats_TypeB, ROHStats_TypeC) %>% #add on total calls and impact counts
+    cbind.data.frame(Calls, ImpactCounts, SIFTAnnot, ROHStats_TypeA, ROHStats_TypeB, ROHStats_TypeC, ROHStats_TypeA_SIFT, ROHStats_TypeB_SIFT, ROHStats_TypeC_SIFT) %>% #add on total calls and impact counts
     mutate(ID = indiv, 
            Subspecies = individual_ids$Subspecies_GroupID_Corrected[match(ID, individual_ids$Sample)],
            OR_AlleleCopies_TypeA = tryCatch({(SY_CountAlleles_nonROH_TypeA*NS_CountAlleles_ROH_TypeA)/(SY_CountAlleles_ROH_TypeA*NS_CountAlleles_nonROH_TypeA)}, error=function(e) NA),
@@ -138,11 +173,12 @@ for (i in 1:length(filenames)){
 
 allIndivDF = bind_rows(allIndiv) %>%
           mutate_if(is.numeric, round, digits=4)
-rm(allIndiv)
 
 #Write output file
-write.table(allIndivDF, file="/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/AnnotsVEPandSIFT/annotPolarizedVCF/GTAnnotationCountResults_Nov2022_Tigers.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
-#write.table(allIndivDF, file="~/Documents/Tigers/AnnotSites/GTAnnotationCountResults_Nov2022_Tigers.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE) #run locally
+write.table(allIndivDF, file="/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/AnnotsVEPandSIFT/annotPolarizedVCF/GTAnnotationCountResults_Nov2022_Tigers_addSIFT.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+#write.table(allIndivDF, file="~/Documents/Tigers/AnnotSites/GTAnnotationCountResults_Nov2022_Tigers_addSIFT.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE) #run locally
+
+rm(allIndiv)
 
 #Calculate OR for entire population
 PerPopulationOR = allIndivDF %>%
@@ -159,7 +195,7 @@ PerPopulationOR = allIndivDF %>%
           mutate_if(is.numeric, round, digits=4) 
 
 #Write output file
-write.table(PerPopulationOR, file="/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/AnnotsVEPandSIFT/annotPolarizedVCF/PerPopulationOR_Nov2022_Tigers.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+#write.table(PerPopulationOR, file="/scratch/users/elliea/jazlyn-ellie/captive-tigers/final_files/AnnotsVEPandSIFT/annotPolarizedVCF/PerPopulationOR_Nov2022_Tigers.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 #write.table(PerPopulationOR, file="~/Documents/Tigers/AnnotSites/PerPopulationOR_Nov2022_Tigers.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE) #run locally
 
 
