@@ -146,6 +146,8 @@ x %>%
   theme_bw() + 
   theme(axis.text.x = element_text(hjust = 0.5, vjust = 1, size = 16), 
         axis.text.y = element_text(size = 16), 
-        plot.title = element_text(size = 18, face = "bold", hjust = 0.5), 
+        plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+        legend.title = element_text(size = 16, hjust = 0.5),
+        legend.text = element_text(size = 14),
         axis.title = element_text(size = 16),
-        strip.text = element_text(size = 14))
+        strip.text = element_text(size = 16))
