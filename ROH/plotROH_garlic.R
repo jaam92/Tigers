@@ -73,19 +73,26 @@ plotFROH = ggplot(FROH, aes(x=Subspecies2, y=Froh)) +
 print(plotFROH)
 
 ###plot inbreeding measures
-source(file = "~/Documents/Tigers/FSNP_Het/heterozygosity_plotting.R")
+all_nodups_full_highCov = read_delim("~/Documents/Tigers/FSNP_Het/highcov.nodups.highcov.biallelic.AN.pCC.DPQUALtest.genmap.lowcov86.filter.nodups.het", delim = "\t")
 y = all_nodups_full_highCov %>%
-  select(Sample, FSNP, Subspecies) %>%
-  mutate(Type = "F[SNP]")
+  left_join(popsDF,by = c("INDV" = "Sample")) %>%
+  mutate(Subspecies = factor(Subspecies_GroupID_Corrected, levels = c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran'))) %>%
+  select(INDV, "F", Subspecies) %>%
+  mutate(Type = "F[SNP]") %>%
+  filter(INDV %in% FROH$INDV)
+
 x = FROH %>%
   select(INDV, Froh, Subspecies2) %>%
-  mutate(Type = "F[ROH]")
+  mutate(Type = "F[ROH]") 
+
 colnames(x) = c("INDV", "Value","Subspecies2" ,"TYPE")
 colnames(y) = c("INDV", "Value","Subspecies2" ,"TYPE")
+
 z = rbind.data.frame(x, y) %>%
-  mutate(Value = ifelse(Value < 0, 0, Value))
+  mutate(Value = ifelse(Value < 0, 0, Value)) 
 z$facets = factor(z$TYPE, 
                   labels = c("F[ROH]", "F[SNP]"))
+
 inbreeding = ggplot(z, aes(x=Subspecies2, y=Value, fill=Subspecies2)) + 
   geom_violin() +
   geom_jitter(height = 0, width = 0.1) +
@@ -93,7 +100,7 @@ inbreeding = ggplot(z, aes(x=Subspecies2, y=Value, fill=Subspecies2)) +
   coord_flip() +
   scale_y_continuous(breaks=seq(-0.5,1,0.25)) +
   scale_fill_manual(name = "Subspecies", values = cbPalette) +
-  labs(x="Subspecies", y="Consanguinity coefficient value") +
+  labs(x="Subspecies", y="Inbreeding coefficient") +
   theme_bw() + 
   theme(axis.text.x = element_text(hjust = 0.5, vjust = 0.5, size = 16), 
         axis.text.y = element_text(size = 16), 
@@ -111,20 +118,31 @@ annotate_figure(plot,
                 left = text_grob("Subspecies", color = "black", size = 18, rot = 90))
 
 
-####Plot FSNP versus FROH linear regression
+####Plot FSNP versus FROH linear regression color by number of deleterious homs
+source(file = "~/Documents/Tigers/AnnotSites/PlotAnnotations.R")
 colnames(x) = c("INDV", "FROH","Subspecies2" ,"TYPE")
 colnames(y) = c("INDV", "FSNP","Subspecies2" ,"TYPE")
+
 x %>% 
+  filter(Subspecies2 != "South China") %>%
   left_join(y, by = c("INDV")) %>%
+  mutate(PutDelSIFT_CountDerHom = ScaledPlotDF$PutDelSIFT_CountDerHom[match(INDV, ScaledPlotDF$ID)]) %>%
   na.omit() %>%
-  #mutate(FSNP = ifelse(FSNP < 0, 0, FSNP)) %>%
-  ggplot(aes(x=FSNP, y=FROH, colour=Subspecies2.x)) + 
-  geom_point() +
+  ggplot(aes(x=FSNP, y=FROH)) + 
+  geom_point(aes(colour = cut(PutDelSIFT_CountDerHom, c(0, 40, 60, 80, 100))), size = 3) +
   geom_smooth(method = "lm") +
   stat_cor(aes(label = paste(..rr.label.., ..p.label.., sep = "~")), color = "red", geom = "label") + #this is not the adjusted r2
   facet_wrap(~Subspecies2.x) + 
-  labs(x=expression(F[SNP]), y=expression(F[ROH])) +
-  scale_colour_manual(name = "Subspecies", values = cbPalette) +
+  labs(x=expression(F[SNP]), y=expression(F[ROH])) + 
+  scale_color_manual(name = "Count putatively deleterious\n derived homozygotes", 
+                     values = c("(0,40]" = "black",
+                                "(40,60]" = "yellow", 
+                                "(60,80]" = "orange", 
+                                "(80,100]" = "red"),
+                     labels = c("<=40",
+                                "40 < variants <= 60", 
+                                "60 < variants <= 80", 
+                                "80 < variants <= 100"))  +
   theme_bw() + 
   theme(axis.text.x = element_text(hjust = 0.5, vjust = 1, size = 16), 
         axis.text.y = element_text(size = 16), 
