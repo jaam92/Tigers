@@ -105,9 +105,11 @@ inbreeding = ggplot(inbreedingCoeff, aes(x=Subspecies2, y=FROH, fill = Subspecie
         legend.text = element_text(size = 14 )) 
 
 
-figure2 = ggarrange(plotROHs, 
-                 inbreeding + xlab(NULL), 
-                 nrow = 2)
+figure2 = cowplot::plot_grid(plotROHs, 
+                             inbreeding + xlab(NULL), 
+                             nrow = 2, 
+                             align = 'v', 
+                             axis = 'lr')
 
 
 
