@@ -44,7 +44,7 @@ cbPalette_expanded = c("Amur" = "#0072B2",  "Bengal" = "#882255", "Malayan" = "#
 
 plotROHs = ggplot(rohLengthsClass, aes(x=Subspecies2, y=AUTO_LEN/10^6, fill=Subspecies2)) + 
   geom_violin() +
-  geom_jitter(height = 0, width = 0.1) +
+  geom_jitter(height = 0, width = 0.1, show.legend = "FALSE") +
   facet_wrap(~TYPE2) +
   scale_fill_manual(name = "Subspecies", values = cbPalette) +
   labs(x="Subspecies", y="Length of genome in ROH (Mb)") +
@@ -85,37 +85,30 @@ x = FROH %>%
   select(INDV, Froh, Subspecies2) %>%
   mutate(Type = "F[ROH]") 
 
-colnames(x) = c("INDV", "Value","Subspecies2" ,"TYPE")
-colnames(y) = c("INDV", "Value","Subspecies2" ,"TYPE")
+inbreedingCoeff = x %>% 
+  left_join(y, by = c("INDV")) %>%
+  na.omit() 
 
-z = rbind.data.frame(x, y) %>%
-  mutate(Value = ifelse(Value < 0, 0, Value)) 
-z$facets = factor(z$TYPE, 
-                  labels = c("F[ROH]", "F[SNP]"))
-
-inbreeding = ggplot(z, aes(x=Subspecies2, y=Value, fill=Subspecies2)) + 
-  geom_violin() +
-  geom_jitter(height = 0, width = 0.1) +
-  facet_wrap(~facets, labeller = label_parsed) +
-  coord_flip() +
-  scale_y_continuous(breaks=seq(-0.5,1,0.25)) +
-  scale_fill_manual(name = "Subspecies", values = cbPalette) +
-  labs(x="Subspecies", y="Inbreeding coefficient") +
+inbreeding = ggplot(inbreedingCoeff, aes(x=Subspecies2, y=FROH, fill = Subspecies2)) +
+  geom_violin(scale = "width", alpha=0.8) + 
+  geom_point(aes(colour = F)) + 
+  scale_x_discrete(limits=c('Generic', 'Amur', 'Bengal', 'Indochinese', 'Malayan', 'South China', 'Sumatran')) +
+  scale_colour_gradient(low = "black", high = "darkorange", name=expression(F[SNP])) +
+  scale_fill_manual(values=cbPalette, guide = "none") + 
+  labs(x= "Subspecies", y = expression(F[ROH])) + 
   theme_bw() + 
   theme(axis.text.x = element_text(hjust = 0.5, vjust = 0.5, size = 16), 
         axis.text.y = element_text(size = 16), 
         plot.title = element_text(size = 18, face = "bold", hjust = 0.5), 
         axis.title = element_text(size = 16),
-        strip.text = element_text(size = 14))  
+        legend.title = element_text(size = 16),
+        legend.text = element_text(size = 14 )) 
 
-plot = ggarrange(plotROHs + xlab(NULL), 
+
+figure2 = ggarrange(plotROHs, 
                  inbreeding + xlab(NULL), 
-                 nrow = 2, 
-                 common.legend = TRUE, 
-                 legend = "none")
+                 nrow = 2)
 
-annotate_figure(plot, 
-                left = text_grob("Subspecies", color = "black", size = 18, rot = 90))
 
 
 ####Plot FSNP versus FROH linear regression color by number of deleterious homs
