@@ -44,8 +44,18 @@ scaleCalls = mean(PlotDF$CallableSites)
 ScaledPlotDF = PropPlotDF %>%
   mutate_at(vars(LOF_CountAlleles:PutNeu_CountVariants_ROH_TypeC), list(~.*scaleCalls)) %>%
   mutate_if(is.numeric, ceiling) %>%
-  mutate(PutDel_ROH = PutDel_CountAlleles_ROH_TypeA + PutDel_CountAlleles_ROH_TypeB + PutDel_CountAlleles_ROH_TypeC,
-         NS_ROH = NS_CountAlleles_ROH_TypeA + NS_CountAlleles_ROH_TypeB + NS_CountAlleles_ROH_TypeC)
+  mutate(PutDel_ROH = PutDel_CountDerHom_ROH_TypeA + PutDel_CountDerHom_ROH_TypeB + PutDel_CountDerHom_ROH_TypeC,
+         PutNeu_ROH = PutNeu_CountDerHom_ROH_TypeA + PutNeu_CountDerHom_ROH_TypeB + PutNeu_CountDerHom_ROH_TypeC,
+         PutDel_nonROH = PutDel_CountDerHom_nonROH_TypeA + PutDel_CountDerHom_nonROH_TypeB + PutDel_CountDerHom_nonROH_TypeC,
+         PutNeu_nonROH = PutNeu_CountDerHom_nonROH_TypeA + PutNeu_CountDerHom_nonROH_TypeB + PutNeu_CountDerHom_nonROH_TypeC,
+         NS_ROH = NS_CountDerHom_ROH_TypeA + NS_CountDerHom_ROH_TypeB + NS_CountDerHom_ROH_TypeC,
+         SY_ROH = SY_CountDerHom_ROH_TypeA + SY_CountDerHom_ROH_TypeB,
+         NS_nonROH = NS_CountDerHom_nonROH_TypeA + NS_CountDerHom_nonROH_TypeB + NS_CountDerHom_nonROH_TypeC,
+         SY_nonROH = SY_CountDerHom_nonROH_TypeA + SY_CountDerHom_nonROH_TypeB ,
+         OR_DerHom_ROHvnonROH_PutDelPutNeu = (PutNeu_nonROH*PutDel_ROH)/(PutNeu_ROH*PutDel_nonROH),
+         OR_DerHom_ROHvnonROH_SYNS = (SY_nonROH*NS_ROH)/(SY_ROH*NS_nonROH),
+         PutDel_rel_PutNeu_DerHom = PutDelSIFT_CountDerHom/PutNeuSIFT_CountDerHom,
+         NS_rel_SY_DerHom = NS_CountDerHom/SY_CountDerHom,)
 
 #write.table(ScaledPlotDF, file = "~/Documents/Tigers/AnnotSites/scaledGTAnnotationCountResults_Nov2022_Tigers.txt", col.names = TRUE, row.names = FALSE, quote = FALSE, sep = "\t")
 
