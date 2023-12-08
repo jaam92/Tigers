@@ -43,19 +43,7 @@ PropPlotDF = PlotDF[,c(1:11, 20:64, 71:106)] %>%
 scaleCalls = mean(PlotDF$CallableSites)
 ScaledPlotDF = PropPlotDF %>%
   mutate_at(vars(LOF_CountAlleles:PutNeu_CountVariants_ROH_TypeC), list(~.*scaleCalls)) %>%
-  mutate_if(is.numeric, ceiling) %>%
-  mutate(PutDel_ROH = PutDel_CountDerHom_ROH_TypeA + PutDel_CountDerHom_ROH_TypeB + PutDel_CountDerHom_ROH_TypeC,
-         PutNeu_ROH = PutNeu_CountDerHom_ROH_TypeA + PutNeu_CountDerHom_ROH_TypeB + PutNeu_CountDerHom_ROH_TypeC,
-         PutDel_nonROH = PutDel_CountDerHom_nonROH_TypeA + PutDel_CountDerHom_nonROH_TypeB + PutDel_CountDerHom_nonROH_TypeC,
-         PutNeu_nonROH = PutNeu_CountDerHom_nonROH_TypeA + PutNeu_CountDerHom_nonROH_TypeB + PutNeu_CountDerHom_nonROH_TypeC,
-         NS_ROH = NS_CountDerHom_ROH_TypeA + NS_CountDerHom_ROH_TypeB + NS_CountDerHom_ROH_TypeC,
-         SY_ROH = SY_CountDerHom_ROH_TypeA + SY_CountDerHom_ROH_TypeB,
-         NS_nonROH = NS_CountDerHom_nonROH_TypeA + NS_CountDerHom_nonROH_TypeB + NS_CountDerHom_nonROH_TypeC,
-         SY_nonROH = SY_CountDerHom_nonROH_TypeA + SY_CountDerHom_nonROH_TypeB ,
-         OR_DerHom_ROHvnonROH_PutDelPutNeu = (PutNeu_nonROH*PutDel_ROH)/(PutNeu_ROH*PutDel_nonROH),
-         OR_DerHom_ROHvnonROH_SYNS = (SY_nonROH*NS_ROH)/(SY_ROH*NS_nonROH),
-         PutDel_rel_PutNeu_DerHom = PutDelSIFT_CountDerHom/PutNeuSIFT_CountDerHom,
-         NS_rel_SY_DerHom = NS_CountDerHom/SY_CountDerHom,)
+  mutate_if(is.numeric, ceiling) 
 
 #write.table(ScaledPlotDF, file = "~/Documents/Tigers/AnnotSites/scaledGTAnnotationCountResults_Nov2022_Tigers.txt", col.names = TRUE, row.names = FALSE, quote = FALSE, sep = "\t")
 
@@ -130,3 +118,107 @@ ggarrange(scaledPutNeuAnnot, scaledPutDelAnnot, nrow = 2)
 pairwise.wilcox.test(ScaledPlotDF$PutDelSIFT_CountDerHom, ScaledPlotDF$Subspecies, p.adj = "bonf")$p.value
 pairwise.wilcox.test(ScaledPlotDF$PutDelSIFT_CountVariants, ScaledPlotDF$Subspecies, p.adj = "bonf")$p.value
 pairwise.wilcox.test(ScaledPlotDF$PutDelSIFT_CountAlleles, ScaledPlotDF$Subspecies, p.adj = "bonf")$p.value
+
+
+
+
+######making Odds-ratios
+test = ScaledPlotDF %>%
+  group_by(Subspecies) %>%
+  summarise_if(is.numeric, sum, na.rm = TRUE) %>%
+  mutate(PutDel_ROH = PutDel_CountDerHom_ROH_TypeA + PutDel_CountDerHom_ROH_TypeB + PutDel_CountDerHom_ROH_TypeC,
+         PutNeu_ROH = PutNeu_CountDerHom_ROH_TypeA + PutNeu_CountDerHom_ROH_TypeB + PutNeu_CountDerHom_ROH_TypeC,
+         PutDel_nonROH = PutDel_CountDerHom_nonROH_TypeA + PutDel_CountDerHom_nonROH_TypeB + PutDel_CountDerHom_nonROH_TypeC,
+         PutNeu_nonROH = PutNeu_CountDerHom_nonROH_TypeA + PutNeu_CountDerHom_nonROH_TypeB + PutNeu_CountDerHom_nonROH_TypeC,
+         NS_ROH = NS_CountDerHom_ROH_TypeA + NS_CountDerHom_ROH_TypeB + NS_CountDerHom_ROH_TypeC,
+         SY_ROH = SY_CountDerHom_ROH_TypeA + SY_CountDerHom_ROH_TypeB,
+         NS_nonROH = NS_CountDerHom_nonROH_TypeA + NS_CountDerHom_nonROH_TypeB + NS_CountDerHom_nonROH_TypeC,
+         SY_nonROH = SY_CountDerHom_nonROH_TypeA + SY_CountDerHom_nonROH_TypeB ,
+         OR_DerHom_ROHvnonROH_PutDelPutNeu = (PutNeu_nonROH*PutDel_ROH)/(PutNeu_ROH*PutDel_nonROH),
+         OR_DerHom_ROHvnonROH_SYNS = (SY_nonROH*NS_ROH)/(SY_ROH*NS_nonROH),
+         PutDel_rel_PutNeu_DerHom = PutDelSIFT_CountDerHom/PutNeuSIFT_CountDerHom,
+         NS_rel_SY_DerHom = NS_CountDerHom/SY_CountDerHom)
+
+
+#subset data
+x = test %>% 
+  select(Subspecies, OR_DerHom_ROHvnonROH_PutDelPutNeu) %>% 
+  mutate(Type = "Putatively Deleterious Relative to Putatively Neutral") %>%
+  rename("Analysis" = "OR_DerHom_ROHvnonROH_PutDelPutNeu")
+
+y = test %>% 
+  select(Subspecies, OR_DerHom_ROHvnonROH_SYNS) %>% 
+  mutate(Type = "Nonsynonymous Relative to Synonymous") %>% 
+  rename("Analysis" = "OR_DerHom_ROHvnonROH_SYNS")
+
+z = rbind.data.frame(x,y)
+
+
+j = data.frame() 
+for (i in unique(test$Subspecies)) {
+  
+  f = test %>% 
+    filter(Subspecies == i)
+  
+  l = matrix(c(as.numeric(f["SY_nonROH"]), as.numeric(f["SY_ROH"]), as.numeric(f["NS_nonROH"]), as.numeric(f["NS_ROH"])),
+             nrow=2,
+             byrow=TRUE)
+  
+  m = cbind.data.frame(f["OR_DerHom_ROHvnonROH_SYNS"], 
+                       fisher.test(l)$conf.int[1],
+                       fisher.test(l)$conf.int[2],
+                       fisher.test(l)$p.value,
+                       f["Subspecies"])
+  
+  colnames(m) = c("OR", "left", "right","pvalue", "Subspecies")
+  
+  m$Analysis = "Nonsynonymous Relative to Synonymous"
+  m$significant = ifelse(m$pvalue <= 0.05, "yes","no") 
+  
+  j = rbind.data.frame(m, j)
+  
+}
+
+#Putatively del and neu
+for (i in unique(test$Subspecies)) {
+  
+  f = test %>% 
+    filter(Subspecies == i)
+  
+  l = matrix(c(as.numeric(f["PutNeu_nonROH"]), as.numeric(f["PutNeu_ROH"]), as.numeric(f["PutDel_nonROH"]), as.numeric(f["PutDel_ROH"])),
+             nrow=2,
+             byrow=TRUE)
+  
+  m = cbind.data.frame(f["OR_DerHom_ROHvnonROH_PutDelPutNeu"], 
+                       fisher.test(l)$conf.int[1],
+                       fisher.test(l)$conf.int[2],
+                       fisher.test(l)$p.value,
+                       f["Subspecies"])
+  
+  colnames(m) = c("OR", "left", "right","pvalue", "Subspecies")
+  
+  m$Analysis = "Putatively Deleterious Relative to Putatively Neutral"
+  m$significant = ifelse(m$pvalue <= 0.05, "yes","no") 
+  
+  j = rbind.data.frame(m, j)
+  
+}
+
+
+#plot
+ggplot(j, aes(x=Subspecies, y=OR, color=significant)) +
+  facet_grid(~Analysis) +
+  geom_errorbar(aes(ymin=left, ymax=right), colour="gray40", width=.2) + 
+  geom_point() + 
+  coord_flip() +  
+  scale_colour_manual(values = c("yes"= "red", "no"="black"), guide="none") +
+  labs(x="Subspecies", y="Odds-ratio") + 
+  ylim(0,3.5) +
+  geom_hline(yintercept = 1) +
+  theme_bw() +
+  theme(axis.text.x = element_text(hjust = 0.5, vjust = 0.5, size = 24), 
+        axis.text.y = element_text(size = 24), 
+        plot.title = element_text(size = 24, hjust = 0.5), 
+        axis.title = element_text(size = 24),
+        strip.text = element_text(size = 24),
+        legend.position = "none")
